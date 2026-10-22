@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://townandcountryplanningltd.co.uk/sitemap.xml
