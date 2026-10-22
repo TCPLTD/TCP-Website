@@ -1,7 +1,8 @@
 (function () {
   var box = document.getElementById('map');
   if (!box || !window.L) return;
-  var projects = (window.TCP_PROJECTS || []).filter(function (p) { return typeof p.lat === 'number' && typeof p.lng === 'number'; });
+  var borough = box.getAttribute('data-borough') || '';
+  var projects = (window.TCP_PROJECTS || []).filter(function (p) { return typeof p.lat === 'number' && typeof p.lng === 'number' && (!borough || p.borough === borough); });
   var map = L.map(box, { scrollWheelZoom: false }).setView([51.67, -0.2], 11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
@@ -12,7 +13,7 @@
   function esc(s) { return String(s || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   var bounds = [];
   projects.forEach(function (p) {
-    var html = '<div class="pin-card"><div class="ph">[Project photos]</div>' +
+    var html = '<div class="pin-card"><div class="pin-ph">Photos to come</div>' +
       '<strong>' + esc(p.street) + ', ' + esc(p.town) + '</strong>' +
       '<div class="meta">' + esc(p.type) + ' · Approved ' + esc(p.year) + '</div>' +
       '<p style="margin:6px 0 8px">' + esc(p.summary) + '</p>' +
@@ -21,5 +22,6 @@
     L.marker([p.lat, p.lng], { icon: pin, title: p.street + ', ' + p.town }).addTo(map).bindPopup(html);
     bounds.push([p.lat, p.lng]);
   });
-  if (bounds.length > 1) map.fitBounds(bounds, { padding: [40, 40] });
+  if (bounds.length > 1) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+  else if (bounds.length === 1) map.setView(bounds[0], 13);
 })();

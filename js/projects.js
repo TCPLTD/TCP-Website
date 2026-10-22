@@ -3,6 +3,7 @@
   if (!list) return;
   var all = window.TCP_PROJECTS || [];
   var limit = parseInt(list.getAttribute('data-limit') || '0', 10);
+  var fixedBorough = list.getAttribute('data-borough') || '';
   var search = document.getElementById('project-search');
   var areaSel = document.getElementById('project-area');
   var chips = Array.prototype.slice.call(document.querySelectorAll('[data-type-filter]'));
@@ -25,6 +26,7 @@
 
   function matches(p) {
     if (state.type !== 'All' && p.type.toLowerCase().indexOf(state.type.toLowerCase()) === -1) return false;
+    if (fixedBorough && p.borough !== fixedBorough) return false;
     if (state.area && p.borough !== state.area) return false;
     if (state.q) {
       var hay = [p.type, p.street, p.town, p.borough, p.summary, String(p.year)].join(' ').toLowerCase();
@@ -39,18 +41,19 @@
     if (limit) shown = shown.slice(0, limit);
     list.innerHTML = '';
     if (count) count.textContent = shown.length === 1 ? '1 project' : shown.length + ' projects';
-    if (!shown.length) { list.appendChild(el('p', 'empty', 'No projects match that search yet. Try another area or type, or call us on 07843 561129.')); return; }
+    if (!shown.length) { list.appendChild(el('p', 'empty', fixedBorough ? 'Projects in ' + fixedBorough + ' are being added. Call 07843 561129 to hear about our work nearby.' : 'No projects match that search yet. Try another area or type, or call us on 07843 561129.')); return; }
     shown.forEach(function (p) {
       var card = el(p.councilLink ? 'a' : 'div', 'card');
       if (p.councilLink) { card.href = p.councilLink; card.target = '_blank'; card.rel = 'noopener'; }
-      card.appendChild(el('div', 'placeholder', p.photo ? '' : '[Project photo]'));
+      var ph = el('div', 'ph'); ph.appendChild(el('span', '', 'Photo to come')); card.appendChild(ph);
       var body = el('div', 'card-body');
       body.appendChild(el('span', 'card-type', p.type));
       body.appendChild(el('span', 'card-title', p.street + ', ' + p.town));
       body.appendChild(el('span', 'card-text', p.summary));
-      var tags = el('div', '');
+      var tags = el('div', 'tags');
       tags.appendChild(el('span', 'tag', 'Approved ' + p.year));
-      if (p.tour) { tags.appendChild(document.createTextNode(' ')); tags.appendChild(el('span', 'tag', '3D tour')); }
+      tags.appendChild(el('span', 'tag', p.borough));
+      if (p.tour) tags.appendChild(el('span', 'tag', '3D tour'));
       body.appendChild(tags);
       card.appendChild(body);
       list.appendChild(card);

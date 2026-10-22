@@ -7,12 +7,14 @@ Static website for townandcountryplanningltd.co.uk, built to be hosted free on G
 | File | Page |
 | --- | --- |
 | `index.html` | Home |
+| `areas.html`, `area-*.html` | Areas we cover, one page per area (edit AREAS in the build script) |
+| `reviews.html` | Client reviews and Google review prompt |
 | `projects.html` | Project gallery with search and filters |
 | `map.html` | Map of approved projects |
 | `services.html` | Services |
 | `process.html` | How we work (five steps) and FAQ |
 | `fees.html` | Design fee estimator |
-| `about.html` | About, team and testimonials |
+| `about.html` | About and team |
 | `contact.html` | Contact details and enquiry form |
 
 `gallery.html` and `faq.html` redirect to the new pages so old links keep working.
