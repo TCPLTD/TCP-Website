@@ -8,7 +8,7 @@
     maxZoom: 18,
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
-  var pin = L.divIcon({ className: '', html: '<span style="display:block;width:18px;height:18px;border-radius:50%;background:#24493C;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></span>', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -10] });
+  var pin = L.divIcon({ className: '', html: '<span style="display:block;width:18px;height:18px;border-radius:50%;background:#173B53;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></span>', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -10] });
 
   function esc(s) { return String(s || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   var bounds = [];

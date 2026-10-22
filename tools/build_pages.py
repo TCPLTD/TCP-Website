@@ -95,10 +95,10 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 <meta property="og:title" content="{esc(title)}">
 <meta property="og:description" content="{esc(desc)}">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#1A372D">
+<meta name="theme-color" content="#0F2A3C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&amp;family=Inter:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400&amp;display=swap">
 <link rel="stylesheet" href="css/site.css">
 {extra_head}{ld}
 </head>
@@ -118,7 +118,7 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 <a class="phone" href="tel:{PHONE_TEL}">{PHONE}</a>
 <a href="mailto:{EMAIL}">{EMAIL}</a>
 <small>Cockfosters, Barnet · since 2005</small>
-<a class="btn btn-brick" href="contact.html">Arrange a meeting</a>
+<a class="btn btn-accent" href="contact.html">Arrange a meeting</a>
 </div>
 </header>
 <div class="content">
@@ -143,7 +143,7 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 
 CLOSING = f'''<section class="closing section"><div class="wrap">
 <div class="stack"><span class="label">Next step</span><h2>Tell us what you are thinking of doing.</h2><p>A short conversation is the best place to start. We will talk through your property, what is likely to be possible and how we would approach it.</p></div>
-<div class="actions"><a class="btn btn-brick" href="tel:{PHONE_TEL}">Call {PHONE}</a><a class="btn btn-ghost" href="contact.html">Send an enquiry</a></div>
+<div class="actions"><a class="btn btn-accent" href="tel:{PHONE_TEL}">Call {PHONE}</a><a class="btn btn-ghost" href="contact.html">Send an enquiry</a></div>
 </div></section>'''
 
 STEPS = [("Consultation", "We meet you at the property, listen to what you want and tell you honestly what is likely to be possible, including anything you can build without planning permission."),
@@ -182,36 +182,39 @@ def quote_html(i):
 def quotes(idx): return '<div class="quotes">' + "".join(quote_html(i) for i in idx) + '</div>'
 def reviews_top():
     return f'''<div class="reviews-top"><div><span class="label">Reviews</span><h3>Worked with us? We would value your review.</h3><p class="muted">Most of our work comes from recommendation. A short Google review helps the next homeowner find us.</p></div>
-<div class="actions"><a class="btn btn-green" href="{GOOGLE_REVIEWS}" target="_blank" rel="noopener">Review us on Google</a><a class="btn btn-line" href="{GOOGLE_REVIEWS}" target="_blank" rel="noopener">Read our Google reviews</a></div></div>'''
+<div class="actions"><a class="btn btn-navy" href="{GOOGLE_REVIEWS}" target="_blank" rel="noopener">Review us on Google</a><a class="btn btn-line" href="{GOOGLE_REVIEWS}" target="_blank" rel="noopener">Read our Google reviews</a></div></div>'''
 
-CHIPS = ["All", "Extension", "Loft", "New build", "Garage or garden room", "Commercial"]
-def filters(with_area=True):
-    chips = "".join(f'<button type="button" class="chip" data-type-filter="{c}" aria-pressed="{"true" if c == "All" else "false"}">{"All types" if c == "All" else c}</button>' for c in CHIPS)
-    area = '<label class="visually-hidden" for="project-area">Area</label><select id="project-area"><option value="">All areas</option></select>' if with_area else ''
-    return f'<div class="filters"><label class="visually-hidden" for="project-search">Search projects</label><input id="project-search" type="search" placeholder="Search by street, town or type, e.g. loft or Potters Bar">{area}{chips}</div>'
+def filters(full=True):
+    selects = ('<label class="fl"><span>Area</span><select id="project-area"><option value="">All areas</option></select></label>'
+               '<label class="fl"><span>Year approved</span><select id="project-year"><option value="">Any year</option></select></label>') if full else ''
+    return (f'<div class="filter-panel"><div class="filter-row"><label class="fl fl-search"><span>Search</span>'
+            f'<input id="project-search" type="search" placeholder="Street, town or type of work, e.g. loft or Potters Bar"></label>{selects}'
+            f'<button type="button" class="btn btn-line btn-clear" id="project-clear" hidden>Clear filters</button></div>'
+            f'<div class="filter-chips" id="project-types" role="group" aria-label="Type of work"></div></div>'
+            f'<p class="result-count" id="project-count" aria-live="polite"></p>')
 
 HERO_ART = '''<svg viewBox="0 0 480 360" role="img" aria-label="Line drawing of a house with a proposed rear extension and loft dormer">
-<g fill="none" stroke="#CFDCD4" stroke-width="2" stroke-linejoin="round">
+<g fill="none" stroke="#C9D6E0" stroke-width="2" stroke-linejoin="round">
 <path d="M70 300 V170 L170 90 L270 170 V300 Z"/>
 <rect x="100" y="200" width="40" height="50"/><rect x="200" y="200" width="40" height="50"/>
 <rect x="140" y="250" width="40" height="50"/>
 <line x1="40" y1="300" x2="450" y2="300"/>
 </g>
-<g fill="none" stroke="#F2C2A8" stroke-width="2.5" stroke-dasharray="7 5" stroke-linejoin="round">
+<g fill="none" stroke="#9CC3E6" stroke-width="2.5" stroke-dasharray="7 5" stroke-linejoin="round">
 <path d="M270 300 V215 H400 V300"/>
 <path d="M150 120 H215 V150 H150 Z"/>
 <rect x="300" y="245" width="70" height="55"/>
 </g>
-<g stroke="#CFDCD4" stroke-width="1" fill="#CFDCD4" font-family="IBM Plex Mono, monospace" font-size="12">
+<g stroke="#C9D6E0" stroke-width="1" fill="#C9D6E0" font-family="Carlito, Calibri, sans-serif" font-size="12">
 <line x1="270" y1="325" x2="400" y2="325"/><line x1="270" y1="318" x2="270" y2="332"/><line x1="400" y1="318" x2="400" y2="332"/>
 <text x="312" y="345" stroke="none">4000</text>
 <line x1="425" y1="215" x2="425" y2="300"/><line x1="418" y1="215" x2="432" y2="215"/><line x1="418" y1="300" x2="432" y2="300"/>
 <text x="434" y="262" stroke="none">3000</text>
 </g>
-<g font-family="IBM Plex Mono, monospace" font-size="11" fill="#CFDCD4">
-<rect x="40" y="18" width="200" height="44" fill="none" stroke="#CFDCD4" stroke-width="1"/>
+<g font-family="Carlito, Calibri, sans-serif" font-size="11" fill="#C9D6E0">
+<rect x="40" y="18" width="200" height="44" fill="none" stroke="#C9D6E0" stroke-width="1"/>
 <text x="50" y="36">PROPOSED REAR ELEVATION</text><text x="50" y="53">SCALE 1:100</text>
-<text x="282" y="206" fill="#F2C2A8">PROPOSED EXTENSION</text>
+<text x="282" y="206" fill="#9CC3E6">PROPOSED EXTENSION</text>
 </g>
 </svg>'''
 
@@ -231,7 +234,7 @@ pages["index.html"] = shell("index.html",
  "Independent planning and design practice in Cockfosters. Extensions, loft conversions and new homes taken from first idea to planning approval and building control since 2005. Call 07843 561129.",
  hero("We design it, draw it and take it through planning.",
       "Town &amp; Country Planning is an independent practice in Cockfosters. Since 2005 we have worked on hundreds of extensions, loft conversions and new homes across North London and Hertfordshire, from the first conversation to approved plans.",
-      f'<div class="actions"><a class="btn btn-brick" href="projects.html">See our projects</a><a class="btn btn-ghost" href="tel:{PHONE_TEL}">Call {PHONE}</a></div>')
+      f'<div class="actions"><a class="btn btn-accent" href="projects.html">See our projects</a><a class="btn btn-ghost" href="tel:{PHONE_TEL}">Call {PHONE}</a></div>')
  + '''<section class="trust"><div class="wrap">
 <div><strong>Since 2005</strong><span>Independent, based in Cockfosters</span></div>
 <div><strong>Hundreds of projects</strong><span>Across London and Hertfordshire</span></div>
@@ -259,22 +262,22 @@ pages["index.html"] = shell("index.html",
 <div class="grid" id="project-list" data-limit="6"></div>
 </div></section>
 <section class="section paper"><div class="wrap map-split">
-<div class="stack" style="gap:20px"><span class="label">Project map</span><h2>See what we have done on your road</h2><p class="lede">Each pin is an approved project. Open one for photos, a short description and a link to the approved plans on the council's website.</p><div><a class="btn btn-green" href="map.html">Open the full map</a></div></div>
+<div class="stack" style="gap:20px"><span class="label">Project map</span><h2>See what we have done on your road</h2><p class="lede">Each pin is an approved project. Open one for photos, a short description and a link to the approved plans on the council's website.</p><div><a class="btn btn-navy" href="map.html">Open the full map</a></div></div>
 <div class="map-wrap map-small"><div id="map" role="region" aria-label="Map of approved projects"></div></div>
 </div></section>
-<section class="section band-green"><div class="wrap stack" style="gap:48px">
+<section class="section band-navy"><div class="wrap stack" style="gap:48px">
 <div class="section-head" style="margin:0"><div class="stack"><span class="label">How we work</span><h2>Five steps from idea to approval</h2><p>Householder applications are normally decided within eight weeks of the council validating them.</p></div><a class="more" href="process.html">How we work</a></div>
 ''' + timeline() + '''
 </div></section>
 <section class="section"><div class="wrap areas-layout">
-<div class="stack" style="gap:20px"><span class="label">Areas we cover</span><h2>Rooted in Barnet and Hertfordshire, working well beyond.</h2><p class="lede">Most of our work is within a few miles of Cockfosters, and we regularly take on projects across North London and Hertfordshire. Pick an area to see the towns we work in and projects nearby.</p><div><a class="btn btn-green" href="areas.html">Explore areas</a></div></div>
+<div class="stack" style="gap:20px"><span class="label">Areas we cover</span><h2>Rooted in Barnet and Hertfordshire, working well beyond.</h2><p class="lede">Most of our work is within a few miles of Cockfosters, and we regularly take on projects across North London and Hertfordshire. Pick an area to see the towns we work in and projects nearby.</p><div><a class="btn btn-navy" href="areas.html">Explore areas</a></div></div>
 ''' + tilemap() + '''
 </div></section>
 <section class="section band" id="reviews"><div class="wrap">
 <div class="section-head"><div class="stack"><span class="label">Client reviews</span><h2>What our clients say</h2></div><a class="more" href="reviews.html">All reviews</a></div>
 ''' + reviews_top() + quotes([0, 1, 3]) + '''
 </div></section>
-<section class="section-sm"><div class="wrap"><div class="cta-box"><div><span class="label">Fees</span><h2>What will my design cost?</h2><p>Answer three quick questions to see what is included for your type of project.</p></div><a class="btn btn-brick" href="fees.html">Estimate my fee</a></div></div></section>
+<section class="section-sm"><div class="wrap"><div class="cta-box"><div><span class="label">Fees</span><h2>What will my design cost?</h2><p>Answer three quick questions to see what is included for your type of project.</p></div><a class="btn btn-accent" href="fees.html">Estimate my fee</a></div></div></section>
 ''' + CLOSING,
  extra_head=LEAFLET, scripts=("data/projects.js", "js/projects.js", "js/vendor/leaflet.js", "js/map.js"))
 
@@ -284,7 +287,6 @@ pages["projects.html"] = shell("projects.html", "Our projects | Town & Country P
  page_head("Projects", "Projects we have taken through planning", "Every project here received planning approval. Search by street, town or type of work, or choose an area.")
  + f'''<section class="section"><div class="wrap">
 {filters(True)}
-<p class="result-count" id="project-count" aria-live="polite"></p>
 <div class="grid" id="project-list"></div>
 </div></section>''' + CLOSING, scripts=("data/projects.js", "js/projects.js"))
 
@@ -330,7 +332,7 @@ pages["areas.html"] = shell("areas.html", "Areas we cover | Town & Country Plann
  page_head("Areas we cover", "Local to Cockfosters, trusted across London and Hertfordshire", "We have prepared applications for councils across North London and Hertfordshire. Knowing how each council approaches extensions, lofts and new homes helps us design schemes that suit local policy.")
  + '<section class="section"><div class="wrap areas-layout"><div class="stack" style="gap:16px"><h2>Where our projects are</h2><p class="lede">The darker the square, the more of our projects are in that area. Select an area to see the towns we cover and projects nearby.</p></div>' + tilemap() + '</div></section>'
  + '<section class="section band"><div class="wrap"><div class="section-head"><div class="stack"><span class="label">Our main areas</span><h2>Choose your area</h2></div></div><div class="area-cards">' + "".join(area_card(a) for a in AREAS) + '</div></div></section>'
- + f'<section class="section" id="further"><div class="wrap split"><div class="prose"><span class="label">Further afield</span><h2>Not on the list?</h2><p>We have also worked in {further}, and we are happy to look at projects elsewhere in London and the Home Counties. Call us to talk about your property.</p></div><div class="stack" style="justify-content:center"><div class="actions"><a class="btn btn-green" href="tel:{PHONE_TEL}">Call {PHONE}</a><a class="btn btn-line" href="contact.html">Send an enquiry</a></div></div></div></section>'
+ + f'<section class="section" id="further"><div class="wrap split"><div class="prose"><span class="label">Further afield</span><h2>Not on the list?</h2><p>We have also worked in {further}, and we are happy to look at projects elsewhere in London and the Home Counties. Call us to talk about your property.</p></div><div class="stack" style="justify-content:center"><div class="actions"><a class="btn btn-navy" href="tel:{PHONE_TEL}">Call {PHONE}</a><a class="btn btn-line" href="contact.html">Send an enquiry</a></div></div></div></section>'
  + CLOSING)
 
 # ---------------- Area pages ----------------
@@ -376,7 +378,7 @@ FAQ = [("Planning permission", [
 faq_html = "".join(f'<h3>{g}</h3>' + "".join(f'<details><summary>{q}</summary><p>{a}</p></details>' for q, a in items) for g, items in FAQ)
 pages["process.html"] = shell("process.html", "How we work | Town & Country Planning Ltd",
  "Our five step process from consultation to planning approval and building control, with answers to common planning questions.",
- '<section class="section band-green"><div class="wrap stack" style="gap:48px"><div class="stack" style="gap:16px;max-width:760px"><span class="label">How we work</span><h1>From first conversation to approved plans</h1><p class="lede" style="color:var(--on-green-muted)">Five clear steps, with one team handling everything and keeping you informed throughout.</p></div>'
+ '<section class="section band-navy"><div class="wrap stack" style="gap:48px"><div class="stack" style="gap:16px;max-width:760px"><span class="label">How we work</span><h1>From first conversation to approved plans</h1><p class="lede" style="color:var(--on-navy-muted)">Five clear steps, with one team handling everything and keeping you informed throughout.</p></div>'
  + timeline() + '</div></section>'
  + f'<section class="section" id="faq"><div class="wrap faq" style="max-width:900px"><span class="label">Questions</span><h2 style="margin-top:12px">Common questions</h2>{faq_html}</div></section>' + CLOSING)
 
@@ -464,13 +466,13 @@ pages["contact.html"] = shell("contact.html", "Contact us | Town & Country Plann
 <label for="f-type">Type of project</label>
 <select id="f-type" name="type"><option value="">Please choose</option><option>Single storey extension</option><option>Two storey extension</option><option>Loft conversion</option><option>Garage conversion</option><option>New home</option><option>Garden room or outbuilding</option><option>Planning advice</option><option>Building control drawings</option><option>Other or not sure</option></select>
 <label for="f-msg">Tell us about your project</label><textarea id="f-msg" name="message" rows="4"></textarea>
-<button class="btn btn-brick" type="submit">Send enquiry</button>
+<button class="btn btn-accent" type="submit">Send enquiry</button>
 <p class="form-msg" id="f-status" aria-live="polite">We will never share your details.</p>
 </form>
 </div></section>''', scripts=("js/contact.js",))
 
 pages["404.html"] = shell("404.html", "Page not found | Town & Country Planning Ltd", "Page not found.",
- '<section class="section"><div class="wrap stack"><span class="label">404</span><h1>Page not found</h1><p class="lede">That page has moved or no longer exists.</p><div class="actions"><a class="btn btn-green" href="index.html">Go to the homepage</a><a class="btn btn-line" href="projects.html">Browse projects</a></div></div></section>')
+ '<section class="section"><div class="wrap stack"><span class="label">404</span><h1>Page not found</h1><p class="lede">That page has moved or no longer exists.</p><div class="actions"><a class="btn btn-navy" href="index.html">Go to the homepage</a><a class="btn btn-line" href="projects.html">Browse projects</a></div></div></section>')
 
 for name, doc in pages.items():
     open(os.path.join(OUT, name), "w").write(doc)
