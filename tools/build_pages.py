@@ -76,7 +76,7 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
     if fname == "index.html":
         ld = '<script type="application/ld+json">' + json.dumps({
             "@context": "https://schema.org", "@type": "ProfessionalService", "name": "Town & Country Planning Ltd",
-            "url": SITE, "telephone": "+447843561129", "email": EMAIL, "foundingDate": "2009",
+            "url": SITE, "telephone": "+447843561129", "email": EMAIL, "foundingDate": "2005",
             "address": {"@type": "PostalAddress", "addressLocality": "Cockfosters, Barnet", "postalCode": "EN4", "addressCountry": "GB"},
             "areaServed": [a[1] for a in AREAS],
             "description": "Planning drawings, planning applications and building control drawings for extensions, loft conversions and new homes in North London and Hertfordshire."}) + '</script>'
@@ -90,6 +90,8 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 <link rel="canonical" href="{canon}">
+<link rel="icon" href="img/logo.png">
+<meta property="og:image" content="{SITE}img/logo.png">
 <meta property="og:title" content="{esc(title)}">
 <meta property="og:description" content="{esc(desc)}">
 <meta property="og:type" content="website">
@@ -105,7 +107,7 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 <div class="shell">
 <header class="side" id="side">
 <a class="brand" href="index.html" aria-label="Town and Country Planning Ltd, home">
-<span class="brand-mark" aria-hidden="true">T&amp;C</span>
+<span class="brand-logo"><img src="img/logo.png" alt="" width="190" height="140"></span>
 <span class="brand-name">Town &amp; Country<span>Planning Ltd</span></span>
 </a>
 <button class="menu-btn" type="button" aria-expanded="false" aria-controls="side-nav">Menu</button>
@@ -115,7 +117,7 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 <div class="side-foot">
 <a class="phone" href="tel:{PHONE_TEL}">{PHONE}</a>
 <a href="mailto:{EMAIL}">{EMAIL}</a>
-<small>Cockfosters, Barnet · since 2009</small>
+<small>Cockfosters, Barnet · since 2005</small>
 <a class="btn btn-brick" href="contact.html">Arrange a meeting</a>
 </div>
 </header>
@@ -213,7 +215,7 @@ HERO_ART = '''<svg viewBox="0 0 480 360" role="img" aria-label="Line drawing of 
 </g>
 </svg>'''
 
-def hero(h1, sub, actions, label="Planning and design consultants · since 2009", art=True):
+def hero(h1, sub, actions, label="Planning and design consultants · since 2005", art=True):
     right = f'<div class="hero-art">{HERO_ART}</div>' if art else ''
     return f'''<section class="hero"><div class="wrap"><div class="hero-copy"><span class="label">{label}</span><h1>{h1}</h1><p>{sub}</p>{actions}</div>{right}</div></section>'''
 
@@ -226,12 +228,12 @@ LEAFLET = '<link rel="stylesheet" href="css/vendor/leaflet.css">\n'
 # ---------------- Home ----------------
 pages["index.html"] = shell("index.html",
  "Town & Country Planning Ltd | Planning drawings and permission, North London and Hertfordshire",
- "Independent planning and design practice in Cockfosters. Extensions, loft conversions and new homes taken from first idea to planning approval and building control since 2009. Call 07843 561129.",
+ "Independent planning and design practice in Cockfosters. Extensions, loft conversions and new homes taken from first idea to planning approval and building control since 2005. Call 07843 561129.",
  hero("We design it, draw it and take it through planning.",
-      "Town &amp; Country Planning is an independent practice in Cockfosters. Since 2009 we have worked on hundreds of extensions, loft conversions and new homes across North London and Hertfordshire, from the first conversation to approved plans.",
+      "Town &amp; Country Planning is an independent practice in Cockfosters. Since 2005 we have worked on hundreds of extensions, loft conversions and new homes across North London and Hertfordshire, from the first conversation to approved plans.",
       f'<div class="actions"><a class="btn btn-brick" href="projects.html">See our projects</a><a class="btn btn-ghost" href="tel:{PHONE_TEL}">Call {PHONE}</a></div>')
  + '''<section class="trust"><div class="wrap">
-<div><strong>Since 2009</strong><span>Independent, based in Cockfosters</span></div>
+<div><strong>Since 2005</strong><span>Independent, based in Cockfosters</span></div>
 <div><strong>Hundreds of projects</strong><span>Across London and Hertfordshire</span></div>
 <div><strong>One team, start to finish</strong><span>Survey, design, planning, building control</span></div>
 <div><strong>Built on recommendation</strong><span>Clients return and refer their friends</span></div>
@@ -410,8 +412,8 @@ pages["reviews.html"] = shell("reviews.html", "Client reviews | Town & Country P
 
 # ---------------- About ----------------
 pages["about.html"] = shell("about.html", "About us | Town & Country Planning Ltd",
- "Independent planning and design practice in Cockfosters, Barnet, founded by Martin McGahon in 2009.",
- page_head("About us", "A small practice with a long record of approvals", "Town &amp; Country Planning Ltd was founded by Martin McGahon in 2009. From our base in Cockfosters we design and manage planning applications for homeowners, builders and developers across North London and Hertfordshire.")
+ "Independent planning and design practice in Cockfosters, Barnet, founded by Martin McGahon in 2005.",
+ page_head("About us", "A small practice with a long record of approvals", "Town &amp; Country Planning Ltd was founded by Martin McGahon in 2005. From our base in Cockfosters we design and manage planning applications for homeowners, builders and developers across North London and Hertfordshire.")
  + '''<section class="section"><div class="wrap split" style="align-items:center">
 <div class="prose">
 <h2>How we have grown</h2>

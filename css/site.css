@@ -69,6 +69,12 @@ p { margin: 0; }
 .side { background: var(--green-deep); color: var(--on-green); }
 .side a { color: var(--on-green); text-decoration: none; }
 .brand { display: flex; align-items: center; gap: 12px; }
+.brand-logo { background: #FFFFFF; border-radius: 8px; padding: 4px; flex: none; display: block; width: 76px; }
+.brand-logo img { width: 100%; height: auto; }
+@media (min-width: 1024px) {
+  .brand { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .brand-logo { width: 100%; padding: 8px 12px; }
+}
 .brand-mark { width: 46px; height: 46px; border-radius: 8px; border: 2px solid var(--on-green); display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 800; font-size: 15px; flex: none; }
 .brand-name { font-family: var(--display); font-weight: 800; font-size: 1.1rem; line-height: 1.15; }
 .brand-name span { display: block; font-weight: 500; font-size: 0.85rem; color: var(--on-green-muted); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px; }
@@ -97,7 +103,7 @@ p { margin: 0; }
   .side-nav, .side-foot { display: none; width: 100%; }
   .side.open .side-nav, .side.open .side-foot { display: flex; }
   .side.open .side-foot { padding: 12px 14px 8px; border-top: 1px solid var(--green-2); }
-  .brand-mark { width: 40px; height: 40px; }
+  .brand-logo { width: 64px; }
 }
 
 /* ---------- Bands ---------- */
