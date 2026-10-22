@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400&amp;display=swap">
 <link rel="stylesheet" href="css/site.css">
 <link rel="stylesheet" href="css/vendor/leaflet.css">
+<link rel="stylesheet" href="css/vendor/MarkerCluster.css">
 
 </head>
 <body>
@@ -49,7 +50,12 @@
 </header>
 <div class="content">
 <main id="main">
-<section class="band page-head"><div class="wrap stack"><span class="label">Project map</span><h1>Approved projects near you</h1><p class="lede">Every pin is a project that received planning approval. We show the street, never the house number, and link to the public planning record on the council's website.</p></div></section><section class="section-sm"><div class="wrap stack" style="gap:16px">
+<section class="band page-head"><div class="wrap stack"><span class="label">Project map</span><h1>Approved projects near you</h1><p class="lede">Every pin is a project that received planning approval. Numbers show where several projects sit close together: select one to zoom in. Pins mark the street, never the house.</p></div></section><section class="section-sm"><div class="wrap stack" style="gap:16px">
+<div class="filter-panel map-filters"><div class="filter-row"><label class="fl fl-search"><span>Find a street or town</span><input id="map-search" type="search" placeholder="e.g. Potters Bar, EN4 or loft"></label>
+<label class="fl"><span>Type of work</span><select id="map-type"><option value="">All types</option></select></label>
+<label class="fl"><span>Area</span><select id="map-area"><option value="">All areas</option></select></label>
+<button type="button" class="btn btn-line btn-clear" id="map-reset" hidden>Reset map</button></div>
+<p class="map-count" id="map-count" aria-live="polite"></p></div>
 <div class="map-wrap"><div id="map" role="region" aria-label="Map of approved projects"></div></div>
 <p class="muted">Prefer a list? <a href="projects.html">Search all projects</a> or <a href="areas.html">browse by area</a>.</p>
 </div></section><section class="closing section"><div class="wrap">
@@ -70,6 +76,7 @@
 <script src="js/site.js"></script>
 <script src="data/projects.js"></script>
 <script src="js/vendor/leaflet.js"></script>
+<script src="js/vendor/leaflet.markercluster.js"></script>
 <script src="js/map.js"></script>
 </body>
 </html>

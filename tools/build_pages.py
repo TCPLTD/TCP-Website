@@ -52,6 +52,31 @@ OTHER_TILES = [  # areas we have worked in less often, shown on the tile map
   ("Tower Hamlets", 1, (5, 4)), ("Wandsworth", 1, (6, 1)), ("Lambeth", 0, (6, 2)), ("Southwark", 0, (6, 3)), ("Merton", 2, (7, 1)),
 ]
 
+# Shading and town lists follow the project data (data/projects.js).
+def _projects():
+    txt = open(os.path.join(OUT, "data", "projects.js"), encoding="utf-8").read()
+    return json.loads(txt[txt.index("= [") + 2:txt.rindex("]") + 1])
+PROJECTS = _projects()
+COUNTS = {}
+TOWNS_SEEN = {}
+for _p in PROJECTS:
+    COUNTS[_p["borough"]] = COUNTS.get(_p["borough"], 0) + 1
+    TOWNS_SEEN.setdefault(_p["borough"], {})
+    TOWNS_SEEN[_p["borough"]][_p["town"]] = TOWNS_SEEN[_p["borough"]].get(_p["town"], 0) + 1
+
+def level(n): return 4 if n >= 100 else 3 if n >= 25 else 2 if n >= 8 else 1 if n else 0
+
+def _norm(t): return t.lower().replace("'", "").replace(" town", "")
+for _i, _a in enumerate(AREAS):
+    seen = sorted(TOWNS_SEEN.get(_a[1], {}).items(), key=lambda kv: -kv[1])
+    towns = [t for t, n in seen if t != "London"][:10]
+    for t in _a[6]:
+        if len(towns) >= 10: break
+        if _norm(t) not in {_norm(x) for x in towns}: towns.append(t)
+    AREAS[_i] = _a[:3] + (max(1, level(COUNTS.get(_a[1], 0))),) + _a[4:6] + (towns,) + _a[7:]
+TILE_BOROUGH = {"Kensington": "Kensington and Chelsea", "Hammersmith": "Hammersmith and Fulham"}
+OTHER_TILES = [(n, level(COUNTS.get(TILE_BOROUGH.get(n, n), 0)), rc) for n, _l, rc in OTHER_TILES]
+
 def tilemap():
     cells = {}
     for a in AREAS:
@@ -186,7 +211,8 @@ def reviews_top():
 
 def filters(full=True):
     selects = ('<label class="fl"><span>Area</span><select id="project-area"><option value="">All areas</option></select></label>'
-               '<label class="fl"><span>Year approved</span><select id="project-year"><option value="">Any year</option></select></label>') if full else ''
+               '<label class="fl"><span>Year approved</span><select id="project-year"><option value="">Any year</option></select></label>'
+               '<label class="fl"><span>Type of approval</span><select id="project-route"><option value="">Any approval</option></select></label>') if full else ''
     return (f'<div class="filter-panel"><div class="filter-row"><label class="fl fl-search"><span>Search</span>'
             f'<input id="project-search" type="search" placeholder="Street, town or type of work, e.g. loft or Potters Bar"></label>{selects}'
             f'<button type="button" class="btn btn-line btn-clear" id="project-clear" hidden>Clear filters</button></div>'
@@ -226,7 +252,8 @@ def page_head(label, h1, lede, cls="band"):
     return f'<section class="{cls} page-head"><div class="wrap stack"><span class="label">{label}</span><h1>{h1}</h1><p class="lede">{lede}</p></div></section>'
 
 pages = {}
-LEAFLET = '<link rel="stylesheet" href="css/vendor/leaflet.css">\n'
+LEAFLET = '<link rel="stylesheet" href="css/vendor/leaflet.css">\n<link rel="stylesheet" href="css/vendor/MarkerCluster.css">\n'
+MAPJS = ("js/vendor/leaflet.js", "js/vendor/leaflet.markercluster.js", "js/map.js")
 
 # ---------------- Home ----------------
 pages["index.html"] = shell("index.html",
@@ -237,7 +264,7 @@ pages["index.html"] = shell("index.html",
       f'<div class="actions"><a class="btn btn-accent" href="projects.html">See our projects</a><a class="btn btn-ghost" href="tel:{PHONE_TEL}">Call {PHONE}</a></div>')
  + '''<section class="trust"><div class="wrap">
 <div><strong>Since 2005</strong><span>Independent, based in Cockfosters</span></div>
-<div><strong>Hundreds of projects</strong><span>Across London and Hertfordshire</span></div>
+<div><strong>500+ approved projects</strong><span>Across London and Hertfordshire</span></div>
 <div><strong>One team, start to finish</strong><span>Survey, design, planning, building control</span></div>
 <div><strong>Built on recommendation</strong><span>Clients return and refer their friends</span></div>
 </div></section>
@@ -279,7 +306,7 @@ pages["index.html"] = shell("index.html",
 </div></section>
 <section class="section-sm"><div class="wrap"><div class="cta-box"><div><span class="label">Fees</span><h2>What will my design cost?</h2><p>Answer three quick questions to see what is included for your type of project.</p></div><a class="btn btn-accent" href="fees.html">Estimate my fee</a></div></div></section>
 ''' + CLOSING,
- extra_head=LEAFLET, scripts=("data/projects.js", "js/projects.js", "js/vendor/leaflet.js", "js/map.js"))
+ extra_head=LEAFLET, scripts=("data/projects.js", "js/projects.js") + MAPJS)
 
 # ---------------- Projects ----------------
 pages["projects.html"] = shell("projects.html", "Our projects | Town & Country Planning Ltd",
@@ -288,16 +315,22 @@ pages["projects.html"] = shell("projects.html", "Our projects | Town & Country P
  + f'''<section class="section"><div class="wrap">
 {filters(True)}
 <div class="grid" id="project-list"></div>
+<div class="load-more"><button type="button" class="btn btn-line" id="project-more" hidden>Show more projects</button></div>
 </div></section>''' + CLOSING, scripts=("data/projects.js", "js/projects.js"))
 
 # ---------------- Map ----------------
 pages["map.html"] = shell("map.html", "Project map | Town & Country Planning Ltd",
  "Map of our approved planning projects across North London and Hertfordshire, with photos and links to the approved plans.",
- page_head("Project map", "Approved projects near you", "Every pin is a project that received planning approval. We show the street, never the house number, and link to the public planning record on the council's website.")
+ page_head("Project map", "Approved projects near you", "Every pin is a project that received planning approval. Numbers show where several projects sit close together: select one to zoom in. Pins mark the street, never the house.")
  + '''<section class="section-sm"><div class="wrap stack" style="gap:16px">
+<div class="filter-panel map-filters"><div class="filter-row"><label class="fl fl-search"><span>Find a street or town</span><input id="map-search" type="search" placeholder="e.g. Potters Bar, EN4 or loft"></label>
+<label class="fl"><span>Type of work</span><select id="map-type"><option value="">All types</option></select></label>
+<label class="fl"><span>Area</span><select id="map-area"><option value="">All areas</option></select></label>
+<button type="button" class="btn btn-line btn-clear" id="map-reset" hidden>Reset map</button></div>
+<p class="map-count" id="map-count" aria-live="polite"></p></div>
 <div class="map-wrap"><div id="map" role="region" aria-label="Map of approved projects"></div></div>
 <p class="muted">Prefer a list? <a href="projects.html">Search all projects</a> or <a href="areas.html">browse by area</a>.</p>
-</div></section>''' + CLOSING, extra_head=LEAFLET, scripts=("data/projects.js", "js/vendor/leaflet.js", "js/map.js"))
+</div></section>''' + CLOSING, extra_head=LEAFLET, scripts=("data/projects.js",) + MAPJS)
 
 # ---------------- Services ----------------
 SV = [("extensions", "Extensions", "An extension is the most common way to gain space without moving. We design single and two storey rear extensions, side returns, wraparounds and over-garage extensions that suit the house and stand a strong chance of approval. Many single storey extensions can be built under permitted development; we check that first, because it can save you time and fees.",
@@ -353,13 +386,13 @@ for i, a in enumerate(AREAS):
 </div></section>
 <section class="section band"><div class="wrap">
 <div class="section-head"><div class="stack"><span class="label">Projects in {name}</span><h2>Approved projects in {name}</h2></div><a class="more" href="projects.html">All projects</a></div>
-<div class="grid" id="project-list" data-borough="{name}"></div>
+<div class="grid" id="project-list" data-borough="{name}"></div><div class="load-more"><button type="button" class="btn btn-line" id="project-more" hidden>Show more projects</button></div>
 </div></section>
 <section class="section-sm"><div class="wrap"><div class="section-head" style="margin-bottom:20px"><h2 style="font-size:1.4rem">Nearby areas</h2><a class="more" href="areas.html">All areas</a></div><div class="area-cards">{"".join(area_card(b) for b in others)}</div></div></section>
 ''' + CLOSING)
     pages[f"area-{slug}.html"] = shell(f"area-{slug}.html", f"Planning drawings in {name} | Town & Country Planning Ltd",
         f"Extensions, loft conversions and new homes in {name}: {', '.join(towns[:4])} and nearby. Planning drawings and applications by Town & Country Planning Ltd. Call {PHONE}.",
-        body, extra_head=LEAFLET, scripts=("data/projects.js", "js/projects.js", "js/vendor/leaflet.js", "js/map.js"))
+        body, extra_head=LEAFLET, scripts=("data/projects.js", "js/projects.js") + MAPJS)
 
 # ---------------- Process + FAQ ----------------
 FAQ = [("Planning permission", [
