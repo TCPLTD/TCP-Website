@@ -244,9 +244,31 @@ HERO_ART = '''<svg viewBox="0 0 480 360" role="img" aria-label="Line drawing of 
 </g>
 </svg>'''
 
-def hero(h1, sub, actions, label="Planning and design consultants · since 2005", art=True):
-    right = f'<div class="hero-art">{HERO_ART}</div>' if art else ''
-    return f'''<section class="hero"><div class="wrap"><div class="hero-copy"><span class="label">{label}</span><h1>{h1}</h1><p>{sub}</p>{actions}</div>{right}</div></section>'''
+# Homepage slideshow behind the hero. Put photos in img/hero/ and set the file name;
+# None shows a placeholder with the caption until the photo is added.
+HERO_SLIDES = [
+    (None, "Photo to come: finished rear extension"),
+    (None, "Photo to come: loft conversion"),
+    (None, "Photo to come: new home"),
+    (None, "Photo to come: kitchen inside an extension"),
+    (None, "Photo to come: garden room"),
+]
+
+def hero_slides():
+    out = []
+    for i, (img, cap) in enumerate(HERO_SLIDES):
+        cls = "hero-slide is-on" if i == 0 else "hero-slide"
+        if img:
+            out.append(f'<div class="{cls}" style="background-image:url(img/hero/{esc(img)})"></div>')
+        else:
+            out.append(f'<div class="{cls} ph-slide ph-slide-{i % 5}"><span>{esc(cap)}</span></div>')
+    return '<div class="hero-slides" aria-hidden="true">' + "".join(out) + '</div>'
+
+def hero(h1, sub, actions, label="Planning and design consultants · since 2005", art=True, slides=False):
+    right = f'<div class="hero-art">{HERO_ART}</div>' if art and not slides else ''
+    bg = hero_slides() if slides else ''
+    cls = "hero hero-photo-bg" if slides else "hero"
+    return f'''<section class="{cls}">{bg}<div class="wrap"><div class="hero-copy"><span class="label">{label}</span><h1>{h1}</h1><p>{sub}</p>{actions}</div>{right}</div></section>'''
 
 def page_head(label, h1, lede, cls="band"):
     return f'<section class="{cls} page-head"><div class="wrap stack"><span class="label">{label}</span><h1>{h1}</h1><p class="lede">{lede}</p></div></section>'
@@ -261,7 +283,7 @@ pages["index.html"] = shell("index.html",
  "Independent planning and design practice in Cockfosters. Extensions, loft conversions and new homes taken from first idea to planning approval and building control since 2005. Call 07843 561129.",
  hero("We design it, draw it and take it through planning.",
       "Town &amp; Country Planning is an independent practice in Cockfosters. Since 2005 we have worked on hundreds of extensions, loft conversions and new homes across North London and Hertfordshire, from the first conversation to approved plans.",
-      f'<div class="actions"><a class="btn btn-accent" href="projects.html">See our projects</a><a class="btn btn-ghost" href="tel:{PHONE_TEL}">Call {PHONE}</a></div>')
+      f'<div class="actions"><a class="btn btn-accent" href="projects.html">See our projects</a><a class="btn btn-ghost" href="tel:{PHONE_TEL}">Call {PHONE}</a></div>', slides=True)
  + '''<section class="trust"><div class="wrap">
 <div><strong>Since 2005</strong><span>Independent, based in Cockfosters</span></div>
 <div><strong>500+ approved projects</strong><span>Across London and Hertfordshire</span></div>
