@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9CC3E6"/><stop offset="1" stop-color="#E8F0F6"/></linearGradient>
+<linearGradient id="lawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9DB98A"/><stop offset="1" stop-color="#6E8F5E"/></linearGradient></defs>
+<rect width="1600" height="900" fill="url(#sky)"/>
+<ellipse cx="220" cy="640" rx="200" ry="230" fill="#7FA06E" opacity=".8"/><ellipse cx="1460" cy="620" rx="190" ry="250" fill="#7FA06E" opacity=".8"/>
+
+  <path d="M560 700 V470 H1240 V700 Z" fill="#C9A982" stroke="#6B5640" stroke-width="3"/>
+  <path d="M530 472 H1270 L1250 440 H550 Z" fill="#4A5560"/>
+  <rect x="620" y="510" width="560" height="190" fill="#CFE0EC" stroke="#2E74B5" stroke-width="4"/>
+  <line x1="760" y1="510" x2="760" y2="700" stroke="#2E74B5" stroke-width="3"/><line x1="900" y1="510" x2="900" y2="700" stroke="#2E74B5" stroke-width="3"/><line x1="1040" y1="510" x2="1040" y2="700" stroke="#2E74B5" stroke-width="3"/>
+<rect y="700" width="1600" height="200" fill="url(#lawn)"/>
+</svg>

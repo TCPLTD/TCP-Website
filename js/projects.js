@@ -8,6 +8,8 @@
   // short lists (home page) show described projects first
   if (limit) all = all.filter(function (p) { return p.described; }).concat(all.filter(function (p) { return !p.described; }));
   var PAGE = 24;
+  var featured = {};
+  (window.TCP_FEATURED || []).forEach(function (f) { featured[f.id] = true; });
   var search = document.getElementById('project-search');
   var areaSel = document.getElementById('project-area');
   var yearSel = document.getElementById('project-year');
@@ -104,6 +106,7 @@
     if (p.tour) tags.appendChild(el('span', 'tag', '3D tour'));
     body.appendChild(tags);
     var links = el('div', 'card-links');
+    if (featured[p.id]) { var f = el('a', '', 'Read more'); f.href = 'project-' + p.id + '.html'; links.appendChild(f); }
     var m = el('a', '', 'View on map'); m.href = 'map.html#' + p.id; links.appendChild(m);
     var withLink = (p.approvals || []).filter(function (a) { return a.link; }).pop();
     if (withLink) {

@@ -64,6 +64,33 @@ for _p in PROJECTS:
     TOWNS_SEEN.setdefault(_p["borough"], {})
     TOWNS_SEEN[_p["borough"]][_p["town"]] = TOWNS_SEEN[_p["borough"]].get(_p["town"], 0) + 1
 
+# Featured projects (data/featured.js): a preview card plus a page each.
+def _featured():
+    txt = open(os.path.join(OUT, "data", "featured.js"), encoding="utf-8").read()
+    items = json.loads(txt[txt.index("= [") + 2:txt.rindex("]") + 1])
+    by_id = {q["id"]: q for q in PROJECTS}
+    out = []
+    for f in items:
+        q = by_id.get(f["id"])
+        if not q or (q.get("street"), q["town"]) != (f.get("street"), f.get("town")):
+            q = next((x for x in PROJECTS if (x.get("street"), x["town"]) == (f.get("street"), f.get("town"))), None)
+        if q:
+            out.append(dict(q, f_title=f.get("title") or "", f_story=f.get("story") or "", f_photos=f.get("photos") or q.get("photos") or []))
+    return out
+WORK_TITLE = {"Extension": "Home extension", "Extension and loft": "Extension and loft conversion", "Loft conversion": "Loft conversion",
+              "New homes": "New home", "Flats and change of use": "Conversion to flats", "Outbuildings and garages": "Garage conversion",
+              "Porch and front": "Front extension and porch", "Other works": "Alterations", "Other approvals": "Planning approval"}
+def f_title(q): return q["f_title"] or f'{WORK_TITLE.get(q["type"], q["type"])} in {q["town"]}'
+def f_place(q): return f'{q["street"]}, {q["town"]}' if q.get("street") else q["town"]
+def f_card(q):
+    img = (f'<img src="{esc(q["f_photos"][0])}" alt="{esc(f_title(q))}" loading="lazy">' if q["f_photos"]
+           else f'<div class="ph"><span>Photo to come</span></div>')
+    return (f'<a class="card feature-card" href="project-{q["id"]}.html">{img}<div class="card-body">'
+            f'<span class="card-type">{esc(q["type"] if q["type"] != "Other approvals" else "Planning approval")}{" · " + str(q["year"]) if q.get("year") else ""}</span>'
+            f'<h3 class="card-title">{esc(f_title(q))}</h3><p class="card-text">{esc(q["summary"])}</p>'
+            f'<span class="go">See the project</span></div></a>')
+FEATURED = _featured()
+
 def level(n): return 4 if n >= 100 else 3 if n >= 25 else 2 if n >= 8 else 1 if n else 0
 
 def _norm(t): return t.lower().replace("'", "").replace(" town", "")
@@ -244,9 +271,23 @@ HERO_ART = '''<svg viewBox="0 0 480 360" role="img" aria-label="Line drawing of 
 </g>
 </svg>'''
 
+# Homepage slideshow. Swap the stand-ins for real photos: put them in img/hero/ and list them here (file, description).
+HERO_SLIDES = [
+    ("img/hero/standin-1.svg", "Stand-in image · Rear extension"),
+    ("img/hero/standin-2.svg", "Stand-in image · Loft conversion"),
+    ("img/hero/standin-3.svg", "Stand-in image · New family home"),
+    ("img/hero/standin-4.svg", "Stand-in image · Garden room"),
+]
+
 def hero(h1, sub, actions, label="Planning and design consultants · since 2005", art=True):
-    right = f'<div class="hero-art">{HERO_ART}</div>' if art else ''
-    return f'''<section class="hero"><div class="wrap"><div class="hero-copy"><span class="label">{label}</span><h1>{h1}</h1><p>{sub}</p>{actions}</div>{right}</div></section>'''
+    if not art:
+        return f'''<section class="hero"><div class="wrap"><div class="hero-copy"><span class="label">{label}</span><h1>{h1}</h1><p>{sub}</p>{actions}</div></div></section>'''
+    slides = "".join(f'<img class="slide{" is-on" if i == 0 else ""}" src="{src}" alt="" {"" if i == 0 else 'loading="lazy" '}data-caption="{esc(cap)}">' for i, (src, cap) in enumerate(HERO_SLIDES))
+    dots = "".join(f'<button type="button" class="dot" aria-label="Show photo {i + 1}: {esc(cap)}"{" aria-current=\"true\"" if i == 0 else ""}></button>' for i, (src, cap) in enumerate(HERO_SLIDES))
+    return (f'''<section class="hero hero-slides" aria-label="Introduction"><div class="slides" aria-hidden="true">{slides}</div>'''
+            f'''<div class="wrap"><div class="hero-copy"><span class="label">{label}</span><h1>{h1}</h1><p>{sub}</p>{actions}</div></div>'''
+            f'''<div class="slide-controls"><span class="slide-caption" aria-live="off">{esc(HERO_SLIDES[0][1])}</span><div class="dots">{dots}</div>'''
+            f'''<button type="button" class="slide-pause" aria-pressed="false">Pause</button></div></section>''')
 
 def page_head(label, h1, lede, cls="band"):
     return f'<section class="{cls} page-head"><div class="wrap stack"><span class="label">{label}</span><h1>{h1}</h1><p class="lede">{lede}</p></div></section>'
@@ -284,9 +325,8 @@ pages["index.html"] = shell("index.html",
 ''' + service_tiles() + '''
 </div></section>
 <section class="section"><div class="wrap">
-<div class="section-head"><div class="stack"><span class="label">Recent approvals</span><h2>Projects we have taken through planning</h2><p class="muted">Every project shown received planning approval. Search by type or town.</p></div><a class="more" href="projects.html">View all projects</a></div>
-''' + filters(False) + '''
-<div class="grid" id="project-list" data-limit="6"></div>
+<div class="section-head"><div class="stack"><span class="label">Featured projects</span><h2>Some of the projects we are proudest of</h2><p class="muted">A selection from hundreds of approvals. Open one to see what we did.</p></div><a class="more" href="projects.html">View all projects</a></div>
+<div class="grid">''' + "".join(f_card(q) for q in FEATURED[:6]) + '''</div>
 </div></section>
 <section class="section paper"><div class="wrap map-split">
 <div class="stack" style="gap:20px"><span class="label">Project map</span><h2>See what we have done on your road</h2><p class="lede">Each pin is an approved project. Open one for photos, a short description and a link to the approved plans on the council's website.</p><div><a class="btn btn-navy" href="map.html">Open the full map</a></div></div>
@@ -306,17 +346,19 @@ pages["index.html"] = shell("index.html",
 </div></section>
 <section class="section-sm"><div class="wrap"><div class="cta-box"><div><span class="label">Fees</span><h2>What will my design cost?</h2><p>Answer three quick questions to see what is included for your type of project.</p></div><a class="btn btn-accent" href="fees.html">Estimate my fee</a></div></div></section>
 ''' + CLOSING,
- extra_head=LEAFLET, scripts=("data/projects.js", "js/projects.js") + MAPJS)
+ extra_head=LEAFLET, scripts=("data/projects.js", "data/featured.js", "js/projects.js") + MAPJS)
 
 # ---------------- Projects ----------------
 pages["projects.html"] = shell("projects.html", "Our projects | Town & Country Planning Ltd",
  "Approved extensions, loft conversions, new homes and conversions across North London and Hertfordshire. Search by town or type of work.",
  page_head("Projects", "Projects we have taken through planning", "Every project here received planning approval. Search by street, town or type of work, or choose an area.")
- + f'''<section class="section"><div class="wrap">
+ + f'''<section class="section band" id="featured"><div class="wrap"><div class="section-head"><div class="stack"><span class="label">Featured</span><h2>Featured projects</h2></div></div>
+<div class="feature-strip">{"".join(f_card(q) for q in FEATURED)}</div></div></section>
+<section class="section"><div class="wrap"><h2 style="margin-bottom:20px">Search every approved project</h2>
 {filters(True)}
 <div class="grid" id="project-list"></div>
 <div class="load-more"><button type="button" class="btn btn-line" id="project-more" hidden>Show more projects</button></div>
-</div></section>''' + CLOSING, scripts=("data/projects.js", "js/projects.js"))
+</div></section>''' + CLOSING, scripts=("data/projects.js", "data/featured.js", "js/projects.js"))
 
 # ---------------- Map ----------------
 pages["map.html"] = shell("map.html", "Project map | Town & Country Planning Ltd",
@@ -392,7 +434,7 @@ for i, a in enumerate(AREAS):
 ''' + CLOSING)
     pages[f"area-{slug}.html"] = shell(f"area-{slug}.html", f"Planning drawings in {name} | Town & Country Planning Ltd",
         f"Extensions, loft conversions and new homes in {name}: {', '.join(towns[:4])} and nearby. Planning drawings and applications by Town & Country Planning Ltd. Call {PHONE}.",
-        body, extra_head=LEAFLET, scripts=("data/projects.js", "js/projects.js") + MAPJS)
+        body, extra_head=LEAFLET, scripts=("data/projects.js", "data/featured.js", "js/projects.js") + MAPJS)
 
 # ---------------- Process + FAQ ----------------
 FAQ = [("Planning permission", [
@@ -506,6 +548,32 @@ pages["contact.html"] = shell("contact.html", "Contact us | Town & Country Plann
 
 pages["404.html"] = shell("404.html", "Page not found | Town & Country Planning Ltd", "Page not found.",
  '<section class="section"><div class="wrap stack"><span class="label">404</span><h1>Page not found</h1><p class="lede">That page has moved or no longer exists.</p><div class="actions"><a class="btn btn-navy" href="index.html">Go to the homepage</a><a class="btn btn-line" href="projects.html">Browse projects</a></div></div></section>')
+
+for i, q in enumerate(FEATURED):
+    nxt = FEATURED[(i + 1) % len(FEATURED)]
+    photos = q["f_photos"]
+    gallery = ("".join(f'<img src="{esc(ph)}" alt="{esc(f_title(q))}, photo {n + 1}" loading="lazy">' for n, ph in enumerate(photos))
+               if photos else '<div class="ph"><span>Photos to come</span></div><div class="ph"><span>Photo to come</span></div><div class="ph"><span>Photo to come</span></div>')
+    apps = "".join(f'<li><strong>{a.get("year", "")}</strong> <span>{esc(a.get("summary") or a["route"])}</span><em>{esc(a["route"])}{" · Ref " + esc(a["ref"]) if a.get("ref") else ""}</em>'
+                   + (f' <a href="{esc(a["link"])}" target="_blank" rel="noopener">Council record</a>' if a.get("link") else "") + '</li>'
+                   for a in reversed(q["approvals"]))
+    story = f'<p class="lede">{esc(q["f_story"])}</p>' if q["f_story"] else ""
+    body = (page_head(f'Featured project · {q["type"] if q["type"] != "Other approvals" else "Planning approval"}', esc(f_title(q)), esc(q["summary"]))
+     + f'''<section class="section"><div class="wrap case">
+<div class="case-gallery">{gallery}</div>
+<div class="case-body">
+<div class="prose">{story}<h2>What was approved</h2><ul class="case-apps">{apps}</ul></div>
+<aside class="case-facts"><dl>
+<dt>Location</dt><dd>{esc(f_place(q))}</dd>
+<dt>Council</dt><dd>{esc(q["borough"])}</dd>
+{"<dt>Approved</dt><dd>" + str(q["year"]) + "</dd>" if q.get("year") else ""}
+<dt>Type of work</dt><dd>{esc(q["type"] if q["type"] != "Other approvals" else "Planning approval")}</dd>
+</dl><a class="btn btn-navy" href="map.html#{q["id"]}">See it on the map</a><a class="btn btn-line" href="contact.html">Talk to us about yours</a></aside>
+</div>
+<div class="case-next"><span class="label">Next project</span><a class="more" href="project-{nxt["id"]}.html">{esc(f_title(nxt))}</a></div>
+</div></section>''' + CLOSING)
+    pages[f"project-{q['id']}.html"] = shell(f"project-{q['id']}.html", f"{f_title(q)} | Town & Country Planning Ltd",
+        f"{q['summary']}. Approved{' in ' + str(q['year']) if q.get('year') else ''}. Planning drawings and application by Town & Country Planning Ltd.", body)
 
 for name, doc in pages.items():
     open(os.path.join(OUT, name), "w").write(doc)
