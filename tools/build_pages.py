@@ -83,9 +83,8 @@ def tilemap():
         slug, name, short, lvl, (r, c) = a[0], a[1], a[2], a[3], a[4]
         cells[(r, c)] = f'<a class="lvl-{lvl}" href="area-{slug}.html" style="grid-row:{r+1};grid-column:{c+1}" title="{name}">{short}</a>'
     for name, lvl, (r, c) in OTHER_TILES:
-        cls = f"lvl-{lvl}" if lvl else "lvl-1"
-        style = f"grid-row:{r+1};grid-column:{c+1}" + ("" if lvl else ";opacity:0.55")
-        cells[(r, c)] = f'<a class="{cls}" href="areas.html#further" style="{style}" title="{name}">{name}</a>'
+        if not lvl: continue  # only show areas where we have had approved jobs
+        cells[(r, c)] = f'<a class="lvl-{lvl}" href="areas.html#further" style="grid-row:{r+1};grid-column:{c+1}" title="{name}">{name}</a>'
     legend = ('<div class="legend"><span>Fewer projects</span><span class="legend-group">'
               + "".join(f'<i class="lvl-{i}"></i>' for i in range(1, 5)) + '</span><span>More projects</span></div>')
     return ('<div><nav class="tilemap" aria-label="Areas we cover, laid out roughly as a map">' + "".join(cells.values()) + '</nav>'
@@ -211,12 +210,11 @@ def reviews_top():
 
 def filters(full=True):
     selects = ('<label class="fl"><span>Area</span><select id="project-area"><option value="">All areas</option></select></label>'
-               '<label class="fl"><span>Year approved</span><select id="project-year"><option value="">Any year</option></select></label>'
-               '<label class="fl"><span>Type of approval</span><select id="project-route"><option value="">Any approval</option></select></label>') if full else ''
-    return (f'<div class="filter-panel"><div class="filter-row"><label class="fl fl-search"><span>Search</span>'
-            f'<input id="project-search" type="search" placeholder="Street, town or type of work, e.g. loft or Potters Bar"></label>{selects}'
-            f'<button type="button" class="btn btn-line btn-clear" id="project-clear" hidden>Clear filters</button></div>'
-            f'<div class="filter-chips" id="project-types" role="group" aria-label="Type of work"></div></div>'
+               '<label class="fl"><span>Year</span><select id="project-year"><option value="">Any year</option></select></label>') if full else ''
+    return (f'<div class="filter-panel"><div class="filter-row"><label class="fl fl-search"><span>Search projects</span>'
+            f'<input id="project-search" type="search" placeholder="Street, town, or e.g. loft"></label>'
+            f'<label class="fl"><span>Type of work</span><select id="project-type"><option value="">All types of work</option></select></label>{selects}'
+            f'<button type="button" class="btn btn-line btn-clear" id="project-clear" hidden>Clear</button></div></div>'
             f'<p class="result-count" id="project-count" aria-live="polite"></p>')
 
 HERO_ART = '''<svg viewBox="0 0 480 360" role="img" aria-label="Line drawing of a house with a proposed rear extension and loft dormer">

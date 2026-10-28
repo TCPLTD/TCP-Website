@@ -344,6 +344,7 @@ form.enquiry .btn { margin-top: 10px; }
 .filter-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
 .fl { display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--navy); flex: 1 1 180px; min-width: 0; }
 .fl-search { flex: 3 1 300px; }
+.fl.fl-search input { font-size: 1.1rem; min-height: 54px; padding-left: 46px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%235B6570' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 16px center; }
 .fl input, .fl select { padding: 12px 14px; border: 1px solid var(--field); border-radius: 8px; font: 1rem var(--body); text-transform: none; letter-spacing: 0; background: var(--bg); color: var(--ink); min-height: 48px; width: 100%; }
 .btn-clear { flex: 0 0 auto; }
 .filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }

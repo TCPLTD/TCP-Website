@@ -13,6 +13,7 @@
   var yearSel = document.getElementById('project-year');
   var routeSel = document.getElementById('project-route');
   var typesBox = document.getElementById('project-types');
+  var typeSel = document.getElementById('project-type');
   var clear = document.getElementById('project-clear');
   var count = document.getElementById('project-count');
   var more = document.getElementById('project-more');
@@ -31,6 +32,16 @@
   fill(areaSel, Object.keys(boroughCounts).filter(function (b) { return b !== 'Other'; }).sort(function (a, b) { return boroughCounts[b] - boroughCounts[a]; }).concat(boroughCounts.Other ? ['Other'] : []));
   fill(yearSel, uniq(all.map(function (p) { return p.year; })).sort(function (a, b) { return b - a; }));
   fill(routeSel, uniq([].concat.apply([], all.map(routes))).sort());
+
+  if (typeSel) {
+    TYPE_ORDER.forEach(function (t) {
+      var n = all.filter(function (p) { return p.type === t; }).length;
+      if (!n) return;
+      var o = document.createElement('option'); o.value = t;
+      o.textContent = (t === 'Other approvals' ? 'Other planning approvals' : t) + ' (' + n + ')';
+      typeSel.appendChild(o);
+    });
+  }
 
   var chips = [];
   if (typesBox) {
@@ -51,12 +62,12 @@
 
   function reset() { shownCount = PAGE; render(); }
   if (search) search.addEventListener('input', function () { state.q = search.value.trim().toLowerCase(); reset(); });
-  [[areaSel, 'area'], [yearSel, 'year'], [routeSel, 'route']].forEach(function (pair) {
+  [[typeSel, 'type'], [areaSel, 'area'], [yearSel, 'year'], [routeSel, 'route']].forEach(function (pair) {
     if (pair[0]) pair[0].addEventListener('change', function () { state[pair[1]] = pair[0].value; reset(); });
   });
   if (clear) clear.addEventListener('click', function () {
     state = { type: '', q: '', area: '', year: '', route: '' };
-    [search, areaSel, yearSel, routeSel].forEach(function (f) { if (f) f.value = ''; });
+    [search, typeSel, areaSel, yearSel, routeSel].forEach(function (f) { if (f) f.value = ''; });
     reset();
   });
   if (more) more.addEventListener('click', function () { shownCount += PAGE; render(); });
