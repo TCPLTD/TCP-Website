@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9CC3E6"/><stop offset="1" stop-color="#E8F0F6"/></linearGradient>
+<linearGradient id="lawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9DB98A"/><stop offset="1" stop-color="#6E8F5E"/></linearGradient></defs>
+<rect width="1600" height="900" fill="url(#sky)"/>
+<ellipse cx="220" cy="640" rx="200" ry="230" fill="#7FA06E" opacity=".8"/><ellipse cx="1460" cy="620" rx="190" ry="250" fill="#7FA06E" opacity=".8"/>
+
+  <path d="M480 700 V430 H1120 V700 Z" fill="#EDE6DA" stroke="#5B6570" stroke-width="3"/>
+  <path d="M440 432 L600 250 H1000 L1160 432 Z" fill="#8E9AA6" stroke="#5B6570" stroke-width="3"/>
+  <path d="M650 300 H950 V395 H650 Z" fill="#F4F1EA" stroke="#2E74B5" stroke-width="4"/>
+  <rect x="690" y="320" width="90" height="60" fill="#CFE0EC" stroke="#2E74B5" stroke-width="3"/><rect x="820" y="320" width="90" height="60" fill="#CFE0EC" stroke="#2E74B5" stroke-width="3"/>
+  <rect x="540" y="480" width="110" height="120" fill="#BFD3E2" stroke="#5B6570" stroke-width="3"/><rect x="745" y="480" width="110" height="120" fill="#BFD3E2" stroke="#5B6570" stroke-width="3"/><rect x="950" y="480" width="110" height="120" fill="#BFD3E2" stroke="#5B6570" stroke-width="3"/>
+<rect y="700" width="1600" height="200" fill="url(#lawn)"/>
+</svg>
