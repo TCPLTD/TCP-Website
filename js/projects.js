@@ -92,47 +92,62 @@
     return true;
   }
 
+  function yearsOf(p) {
+    var ys = (p.approvals || []).map(function (a) { return a.year; }).filter(Boolean);
+    if (!ys.length) return p.year || '';
+    var lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
+    return lo === hi ? String(lo) : lo + '–' + hi;
+  }
+  function typeLabel(p) {
+    var n = (p.approvals || []).length;
+    if (n > 1) return n + ' approved jobs';
+    return p.type === 'Other approvals' ? 'Planning approval' : p.type;
+  }
+
   function card(p) {
     var c = el('article', 'card project-card');
+    var many = (p.approvals || []).length > 1;
     if (p.photos && p.photos.length) {
       var img = el('img', 'card-img');
       img.src = p.photos[0]; img.alt = p.type + ' in ' + p.town; img.loading = 'lazy';
       c.appendChild(img);
     } else {
       var head = el('div', 'card-head');
-      head.appendChild(el('span', 'card-type', p.type === 'Other approvals' ? 'Planning approval' : p.type));
-      if (p.year) head.appendChild(el('span', 'card-year', p.year));
+      head.appendChild(el('span', 'card-type', typeLabel(p)));
+      head.appendChild(el('span', 'card-year', yearsOf(p)));
       c.appendChild(head);
     }
     var body = el('div', 'card-body');
-    if (p.photos && p.photos.length) body.appendChild(el('span', 'card-type', p.type));
+    if (p.photos && p.photos.length) body.appendChild(el('span', 'card-type', typeLabel(p)));
     body.appendChild(el('h3', 'card-title', place(p)));
-    body.appendChild(el('p', 'card-text', p.summary));
+    if (!many) body.appendChild(el('p', 'card-text', p.summary));
     var tags = el('div', 'tags');
     tags.appendChild(el('span', 'tag', p.borough === 'Other' ? 'Further afield' : p.borough));
-    var n = (p.approvals || []).length;
-    if (n > 1) tags.appendChild(el('span', 'tag', n + ' approvals'));
     if (p.tour) tags.appendChild(el('span', 'tag', '3D tour'));
     body.appendChild(tags);
     var links = el('div', 'card-links');
     var m = el('a', '', 'View on map'); m.href = 'map.html#' + p.id; links.appendChild(m);
-    var linked = (p.approvals || []).filter(function (a) { return a.link; });
-    if (linked.length === 1) {
-      var r = el('a', '', 'Council record'); r.href = linked[0].link; r.target = '_blank'; r.rel = 'noopener';
-      r.setAttribute('aria-label', 'Council planning record for ' + place(p) + ' (opens in a new tab)');
-      links.appendChild(r);
-    }
-    // a house with several approvals lists each one with its own council link
-    if ((p.approvals || []).length > 1) {
+    if (!many) {
+      var one = (p.approvals || [])[0];
+      if (one && one.link) {
+        var r = el('a', '', 'Council record'); r.href = one.link; r.target = '_blank'; r.rel = 'noopener';
+        r.setAttribute('aria-label', 'Council planning record for ' + place(p) + ' (opens in a new tab)');
+        links.appendChild(r);
+      }
+    } else {
+      // a house with several approvals: each job gets its own date, description and council link
       var ul = el('ul', 'approval-list');
       p.approvals.slice().reverse().forEach(function (a) {
         var li = el('li');
-        li.appendChild(el('span', 'approval-year', a.year || ''));
-        var txt = el('span', 'approval-text', a.route + (a.ref ? ' · ' + a.ref : ''));
-        li.appendChild(txt);
-        if (a.link && linked.length > 1) {
-          var l = el('a', '', 'Council record'); l.href = a.link; l.target = '_blank'; l.rel = 'noopener';
-          l.setAttribute('aria-label', 'Council record for ' + (a.ref || a.route) + ', ' + place(p) + ' (opens in a new tab)');
+        var top = el('div', 'approval-top');
+        top.appendChild(el('span', 'approval-year', a.year || ''));
+        top.appendChild(el('span', 'approval-desc', a.summary || a.route));
+        li.appendChild(top);
+        li.appendChild(el('div', 'approval-meta', a.route + (a.ref ? ' · Ref ' + a.ref : '')));
+        if (a.link) {
+          var l = el('a', 'approval-link', 'Council record for this job');
+          l.href = a.link; l.target = '_blank'; l.rel = 'noopener';
+          l.setAttribute('aria-label', 'Council record for the ' + (a.year || '') + ' job at ' + place(p) + (a.ref ? ', ' + a.ref : '') + ' (opens in a new tab)');
           li.appendChild(l);
         }
         ul.appendChild(li);

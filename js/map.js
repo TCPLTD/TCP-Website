@@ -34,10 +34,10 @@
     var items = (p.approvals || []).slice().reverse().map(function (a) {
       return '<li><span class="pin-year">' + esc(a.year || '') + '</span><span>' + esc(a.summary || a.route) +
         '<em>' + (a.summary ? esc(a.route) : '') + (a.ref ? (a.summary ? ' · ' : '') + 'Ref ' + esc(a.ref) : '') + '</em>' +
-        (a.link ? '<a href="' + esc(a.link) + '" target="_blank" rel="noopener">See the approved plans</a>' : '') + '</span></li>';
+        (a.link ? '<a href="' + esc(a.link) + '" target="_blank" rel="noopener">Council record for this job</a>' : '') + '</span></li>';
     }).join('');
     return '<div class="pin-card">' + img +
-      '<span class="pin-type">' + esc(p.type === 'Other approvals' ? 'Planning approval' : p.type) + '</span>' +
+      '<span class="pin-type">' + esc((p.approvals || []).length > 1 ? p.approvals.length + ' approved jobs' : (p.type === 'Other approvals' ? 'Planning approval' : p.type)) + '</span>' +
       '<strong>' + esc(place(p)) + '</strong>' +
       '<div class="meta">' + esc(p.borough === 'Other' ? 'Further afield' : p.borough) + (p.tour ? ' · <a href="' + esc(p.tour) + '" target="_blank" rel="noopener">3D tour</a>' : '') + '</div>' +
       '<ul class="pin-list">' + items + '</ul></div>';
