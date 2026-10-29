@@ -350,6 +350,7 @@ pages["map.html"] = shell("map.html", "Project map | Town & Country Planning Ltd
 <button type="button" class="btn btn-line btn-clear" id="map-reset" hidden>Reset map</button></div>
 <p class="map-count" id="map-count" aria-live="polite"></p></div>
 <div class="map-wrap"><div id="map" role="region" aria-label="Map of approved projects"></div></div>
+<div class="map-results" id="map-results" hidden><h2 class="map-results-head" id="map-results-head"></h2><ul class="result-list" id="map-results-list"></ul><button type="button" class="btn btn-line" id="map-results-more" hidden>Show more</button></div>
 <p class="muted">Prefer a list? <a href="projects.html">Search all projects</a> or <a href="areas.html">browse by area</a>.</p>
 </div></section>''' + CLOSING, extra_head=LEAFLET, scripts=("data/projects.js",) + MAPJS)
 

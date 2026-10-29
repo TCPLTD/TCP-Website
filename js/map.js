@@ -73,8 +73,82 @@
     return true;
   }
 
+  // list of matching jobs under the map (full map page)
+  var results = document.getElementById('map-results');
+  var resHead = document.getElementById('map-results-head');
+  var resList = document.getElementById('map-results-list');
+  var resMore = document.getElementById('map-results-more');
+  var PAGE = 30, limit = PAGE, lastShown = [];
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  // jobs at this house that match the search words; words found in the address count for every job
+  function matchingJobs(p) {
+    var jobs = (p.approvals || []).slice().reverse();
+    var q = search ? search.value.trim().toLowerCase() : '';
+    if (!q) return jobs;
+    var addr = [p.street, p.town, p.district, p.borough].join(' ').toLowerCase();
+    var words = q.split(/\s+/).filter(function (w) { return addr.indexOf(w) === -1; });
+    if (!words.length) return jobs;
+    var hit = jobs.filter(function (a) {
+      var t = [a.summary, a.route, a.ref, p.type].join(' ').toLowerCase();
+      return words.every(function (w) { return t.indexOf(w) !== -1; });
+    });
+    return hit.length ? hit : jobs;
+  }
+  function showOnMap(m) {
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (group.zoomToShowLayer) group.zoomToShowLayer(m, function () { m.openPopup(); });
+    else { map.setView(m.getLatLng(), 15); m.openPopup(); }
+  }
+  function renderResults() {
+    if (!results) return;
+    var filtering = (search && search.value.trim()) || (typeSel && typeSel.value) || (areaSel && areaSel.value);
+    results.hidden = !filtering;
+    if (!filtering) return;
+    var rows = lastShown.map(function (m) { return { m: m, jobs: matchingJobs(m._p) }; });
+    var total = rows.reduce(function (n, r) { return n + r.jobs.length; }, 0);
+    var term = search && search.value.trim() ? ' for \u201c' + search.value.trim() + '\u201d' : '';
+    resHead.textContent = rows.length ? total + (total === 1 ? ' job' : ' jobs') + ' at ' + rows.length + (rows.length === 1 ? ' address' : ' addresses') + term : 'No jobs found' + term;
+    resList.innerHTML = '';
+    rows.slice(0, limit).forEach(function (r) {
+      var p = r.m._p, li = el('li', 'result-item');
+      var head = el('div', 'result-place', place(p) + ' ');
+      head.appendChild(el('span', 'result-area', p.borough === 'Other' ? 'Further afield' : p.borough));
+      li.appendChild(head);
+      var btn = el('button', 'btn btn-line result-show', 'Show on map'); btn.type = 'button';
+      btn.setAttribute('aria-label', 'Show ' + place(p) + ' on the map');
+      btn.addEventListener('click', function () { showOnMap(r.m); });
+      li.appendChild(btn);
+      var ul = el('ul', 'approval-list');
+      r.jobs.forEach(function (a) {
+        var j = el('li'), top = el('div', 'approval-top');
+        top.appendChild(el('span', 'approval-year', a.year || ''));
+        top.appendChild(el('span', 'approval-desc', a.summary || a.route));
+        j.appendChild(top);
+        j.appendChild(el('div', 'approval-meta', a.route + (a.ref ? ' \u00b7 Ref ' + a.ref : '')));
+        if (a.link) {
+          var l = el('a', 'approval-link', 'Council record for this job');
+          l.href = a.link; l.target = '_blank'; l.rel = 'noopener';
+          l.setAttribute('aria-label', 'Council record for the ' + (a.year || '') + ' job at ' + place(p) + (a.ref ? ', ' + a.ref : '') + ' (opens in a new tab)');
+          j.appendChild(l);
+        }
+        ul.appendChild(j);
+      });
+      li.appendChild(ul);
+      var others = (p.approvals || []).length - r.jobs.length;
+      if (others > 0) li.appendChild(el('p', 'result-more', '+ ' + others + ' other ' + (others === 1 ? 'job' : 'jobs') + ' at this address (see the map pin)'));
+      resList.appendChild(li);
+    });
+    resMore.hidden = rows.length <= limit;
+    if (!resMore.hidden) resMore.textContent = 'Show more (' + (rows.length - limit) + ' left)';
+  }
+  if (resMore) resMore.addEventListener('click', function () { limit += PAGE; renderResults(); });
+
   function draw(fit) {
     var shown = markers.filter(function (m) { return matches(m._p); });
+    lastShown = shown.slice().sort(function (a, b) { return place(a._p).localeCompare(place(b._p)); });
+    limit = PAGE;
+    renderResults();
     group.clearLayers();
     if (group.addLayers) group.addLayers(shown); else shown.forEach(function (m) { group.addLayer(m); });
     var filtering = (search && search.value) || (typeSel && typeSel.value) || (areaSel && areaSel.value);
