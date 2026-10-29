@@ -116,11 +116,28 @@
     body.appendChild(tags);
     var links = el('div', 'card-links');
     var m = el('a', '', 'View on map'); m.href = 'map.html#' + p.id; links.appendChild(m);
-    var withLink = (p.approvals || []).filter(function (a) { return a.link; }).pop();
-    if (withLink) {
-      var r = el('a', '', 'Council record'); r.href = withLink.link; r.target = '_blank'; r.rel = 'noopener';
+    var linked = (p.approvals || []).filter(function (a) { return a.link; });
+    if (linked.length === 1) {
+      var r = el('a', '', 'Council record'); r.href = linked[0].link; r.target = '_blank'; r.rel = 'noopener';
       r.setAttribute('aria-label', 'Council planning record for ' + place(p) + ' (opens in a new tab)');
       links.appendChild(r);
+    }
+    // a house with several approvals lists each one with its own council link
+    if ((p.approvals || []).length > 1) {
+      var ul = el('ul', 'approval-list');
+      p.approvals.slice().reverse().forEach(function (a) {
+        var li = el('li');
+        li.appendChild(el('span', 'approval-year', a.year || ''));
+        var txt = el('span', 'approval-text', a.route + (a.ref ? ' · ' + a.ref : ''));
+        li.appendChild(txt);
+        if (a.link && linked.length > 1) {
+          var l = el('a', '', 'Council record'); l.href = a.link; l.target = '_blank'; l.rel = 'noopener';
+          l.setAttribute('aria-label', 'Council record for ' + (a.ref || a.route) + ', ' + place(p) + ' (opens in a new tab)');
+          li.appendChild(l);
+        }
+        ul.appendChild(li);
+      });
+      body.appendChild(ul);
     }
     body.appendChild(links);
     c.appendChild(body);
