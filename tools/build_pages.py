@@ -498,6 +498,10 @@ _FAQ_ALL = {q: a for _g, items in FAQ for q, a in items}
 def faq_item(q, a): return f'<details><summary>{q}</summary><p>{a}</p></details>'
 def faq_list(qs): return '<div class="faq">' + "".join(faq_item(q, _FAQ_ALL[q]) for q in qs) + '</div>'
 
+# The home page figure counts every approval in data/projects.js, rounded down to the nearest 50,
+# so it updates by itself whenever the project data is rebuilt.
+APPROVAL_COUNT = sum(len(p.get("approvals", [])) for p in PROJECTS) // 50 * 50
+
 pages = {}
 LEAFLET = '<link rel="stylesheet" href="css/vendor/leaflet.css">\n<link rel="stylesheet" href="css/vendor/MarkerCluster.css">\n'
 MAPJS = ("js/vendor/leaflet.js", "js/vendor/leaflet.markercluster.js", "js/map.js")
@@ -511,7 +515,7 @@ pages["index.html"] = shell("index.html",
       f'<div class="actions"><a class="btn btn-accent" href="projects.html">See our projects</a><a class="btn btn-ghost" href="tel:{PHONE_TEL}">Call {PHONE}</a></div>', slides=True)
  + '''<section class="trust"><div class="wrap">
 <div><strong>Since 2005</strong><span>Independent, based in Cockfosters</span></div>
-<div><strong>500+ approved projects</strong><span>Across London and Hertfordshire</span></div>
+<div><strong>''' + str(APPROVAL_COUNT) + '''+ planning approvals</strong><span>Across London and Hertfordshire</span></div>
 <div><strong>One team, start to finish</strong><span>Survey, design, planning, building control</span></div>
 <div><strong>Built on recommendation</strong><span>Clients return and refer their friends</span></div>
 </div></section>
