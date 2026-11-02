@@ -564,7 +564,8 @@ pages["index.html"] = shell("index.html",
 <section class="section"><div class="wrap why">
 <div class="stack" style="gap:20px"><span class="label">Why us</span><h2>Good design, and the planning knowledge to get it approved.</h2>
 <p class="lede">We design something that works for you and suits your house, your street and the council's policies. Then the same small team handles the application, so you always know who you are talking to and where it stands.</p>
-<div><a class="more" href="about.html">More about us</a></div></div>
+<div><a class="more" href="about.html">More about us</a></div>
+<a class="press-mini" href="about.html#press"><img src="img/press/essential-kitchen-jan-2017.jpg" alt="" width="419" height="542" loading="lazy"><span><small>As featured in</small><strong>Essential Kitchen Bathroom Bedroom</strong><span>January 2017</span></span></a></div>
 <div class="facts"><div><strong>Honest advice</strong><span>What is likely to be approved, before you spend money</span></div><div><strong>Local knowledge</strong><span>Years of applications with the same councils</span></div><div><strong>Clear drawings</strong><span>Produced in CAD for planners and builders</span></div><div><strong>Kept informed</strong><span>Updates at every stage of the application</span></div></div>
 </div></section>
 <section class="section band-navy"><div class="wrap stack" style="gap:48px">
@@ -730,6 +731,11 @@ pages["about.html"] = shell("about.html", "About us | Town & Country Planning Lt
 <p>We stay involved after approval, preparing building control drawings and recommending builders and structural engineers we trust.</p>
 </div>
 <div class="ph" style="aspect-ratio:4/3"><span>Photo: the team or the office</span></div>
+</div></section>
+<section class="section press" id="press" aria-labelledby="press-h"><div class="wrap press-wrap">
+<figure class="press-cover"><img src="img/press/essential-kitchen-jan-2017.jpg" alt="Cover of Essential Kitchen Bathroom Bedroom magazine, January 2017" width="419" height="542" loading="lazy"></figure>
+<div class="stack" style="gap:16px"><span class="label">In the press</span><h2 id="press-h">As featured in Essential Kitchen Bathroom Bedroom</h2>
+<p class="lede">Our work appeared in the January 2017 issue of <em>Essential Kitchen Bathroom Bedroom</em>, the UK magazine for kitchen, bathroom and bedroom design.</p></div>
 </div></section>
 <section class="section band"><div class="wrap">
 <div class="section-head"><div class="stack"><span class="label">The team</span><h2>Who you will work with</h2></div></div>
