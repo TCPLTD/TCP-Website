@@ -400,15 +400,10 @@
       var c = card(p), tags = c.querySelector('.tags');
       if (showBest && i < 3) {
         c.classList.add('is-best');
-        var why = el('p', 'card-why');
-        why.appendChild(el('strong', '', 'Why: '));
-        why.appendChild(document.createTextNode(reason(p)));
         var head = c.querySelector('.card-body');
-        head.insertBefore(why, head.firstChild);
         head.insertBefore(el('span', 'best-badge', 'Best match ' + (i + 1)), head.firstChild);
-      } else if (parsed.place) {
-        tags.insertBefore(el('span', 'tag tag-near', milesText(p).replace(/^./, function (x) { return x.toUpperCase(); })), tags.firstChild);
       }
+      if (parsed.place) tags.insertBefore(el('span', 'tag tag-near', milesText(p).replace(/^./, function (x) { return x.toUpperCase(); })), tags.firstChild);
       list.appendChild(c);
     });
   }
