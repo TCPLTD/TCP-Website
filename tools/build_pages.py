@@ -336,7 +336,10 @@ def _featured():
 BY_ID = {p["id"]: p for p in PROJECTS}
 FEATURED = []
 for _f in _featured():
-    _p = BY_ID.get(_f["id"]) or next((p for p in PROJECTS if p.get("street") == _f.get("street") and p["town"] == _f.get("town")), None)
+    _p = BY_ID.get(_f["id"]) or (None if _f.get("standalone") else next((p for p in PROJECTS if p.get("street") == _f.get("street") and p["town"] == _f.get("town")), None))
+    if not _p and _f.get("standalone"):
+        # a featured job that is not in the approvals data (e.g. building control only, or decided after the last data refresh)
+        _p = dict(_f["standalone"], id=_f["id"], street=_f.get("street", ""), town=_f.get("town", ""), nomap=True)
     if _p: FEATURED.append((_f, _p))
 
 def feat_url(p): return f'project-{p["id"]}.html'
@@ -344,6 +347,7 @@ def feat_place(p): return f'{p["street"]}, {p["town"]}' if p.get("street") else 
 def feat_years(p):
     ys = sorted({a["year"] for a in p.get("approvals", []) if a.get("year")})
     return (str(ys[0]) if len(ys) == 1 else f"{ys[0]}–{ys[-1]}") if ys else str(p.get("year", ""))
+def feat_status(p): return p.get("status") or f"Approved {feat_years(p)}"
 def feat_photo(f, cap="Photo to come"):
     if f.get("photos"): return f'<img src="{esc(f["photos"][0])}" alt="{esc(f["title"])}" loading="lazy">'
     return f'<div class="ph"><span>{cap}</span></div>'
@@ -351,7 +355,7 @@ def feat_photo(f, cap="Photo to come"):
 def featured_card(f, p, i, total):
     return (f'<article class="fp-card" role="group" aria-roledescription="slide" aria-label="{i+1} of {total}: {esc(f["title"])}">'
             f'<a class="fp-photo" href="{feat_url(p)}" tabindex="-1" aria-hidden="true">{feat_photo(f)}</a>'
-            f'<div class="fp-body"><span class="card-type">{esc(p["type"])} · Approved {feat_years(p)}</span>'
+            f'<div class="fp-body"><span class="card-type">{esc(p["type"])} · {esc(feat_status(p))}</span>'
             f'<h3><a href="{feat_url(p)}">{esc(f["title"])}</a></h3><p>{esc(f["project"])}</p>'
             f'<a class="more" href="{feat_url(p)}" aria-label="View project: {esc(f["title"])}">View project</a></div></article>')
 
@@ -400,20 +404,20 @@ def featured_page(i):
 <div class="prose">
 <h2>The project</h2>{desc}
 <h3>Key features</h3><ul class="case-feats">{feats}</ul>
-<h3>Planning decision</h3><ul class="case-apps">{apps}</ul>
+{f'<h3>Planning decision</h3><ul class="case-apps">{apps}</ul>' if apps else ""}
 </div>
 <aside class="case-facts"><dl>
 <dt>Location</dt><dd>{esc(feat_place(p))}</dd>
 <dt>Council</dt><dd>{esc(council)}</dd>
-<dt>Planning decision</dt><dd>Approved {feat_years(p)}</dd>
+<dt>{"Status" if p.get("status") else "Planning decision"}</dt><dd>{esc(feat_status(p))}</dd>
 <dt>Type of work</dt><dd>{esc(p["type"])}</dd>
-</dl><a class="btn btn-navy" href="projects.html#{p["id"]}">See it on the map</a>{tour}<a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Talk to us about yours</a></aside>
+</dl>{"" if p.get("nomap") else f'<a class="btn btn-navy" href="projects.html#{p["id"]}">See it on the map</a>'}{tour}<a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Talk to us about yours</a></aside>
 </div>
 <div class="cta-box case-cta"><div><span class="label">Your project</span><h2>Planning {plan_word}?</h2><p>Tell us about your house and what you have in mind. We will tell you honestly what is likely to be approved.</p></div><div class="actions"><a class="btn btn-accent" href="tel:{PHONE_TEL}">Call {PHONE}</a><a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Send an enquiry</a></div></div>
 <div><div class="section-head" style="margin-bottom:24px"><h2 style="font-size:1.5rem">More projects</h2><a class="more" href="projects.html">All projects and the map</a></div><div class="fp-grid">{more_html}</div></div>
 </div></section>''')
     return shell(feat_url(p), f'{f["title"]} | Town & Country Planning Ltd',
-                 f'{f["project"]}. Approved {feat_years(p)}. Design, drawings and planning application by Town & Country Planning Ltd.', body)
+                 f'{f["project"]}. {feat_status(p)}. Design, drawings and planning application by Town & Country Planning Ltd.', body)
 
 # ---------------- "What are you planning?" ----------------
 _H = '<path d="M8 72H112"/>'
