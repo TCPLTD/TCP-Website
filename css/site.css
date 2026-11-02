@@ -526,3 +526,6 @@ form.enquiry .btn { margin-top: 10px; }
 .quote:target { outline: 3px solid var(--accent); outline-offset: 2px; }
 .tag-best { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .tag-near { background: var(--navy); color: var(--on-navy); border-color: var(--navy); }
+.pl-where { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; }
+.pl-where .fl { flex: 1 1 280px; }
+.pl-hint { margin: 10px 0 0; color: var(--muted); }

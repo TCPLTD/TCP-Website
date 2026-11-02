@@ -88,6 +88,8 @@
       var keep = state; state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '' };
       parseQuery(); var n = all.filter(matches).length; state = keep; parseQuery(); return n;
     },
+    // the name of a place in our records that matches what was typed, or null
+    place: function (text) { var k = (text || '').toLowerCase().replace(/'/g, '').trim(); return PLACES[k] ? PLACES[k].name : null; },
     set: function (o) {
       state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '', boost: o.boost || [] };
       if (search) search.value = o.q || '';

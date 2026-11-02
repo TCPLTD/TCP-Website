@@ -16,6 +16,7 @@
       }
     }
     if (params.get('about')) form.elements.message.value = params.get('about') + '\n\n';
+    if (params.get('area')) form.elements.area.value = params.get('area');
   } catch (e) {}
   form.addEventListener('submit', function (e) {
     e.preventDefault();

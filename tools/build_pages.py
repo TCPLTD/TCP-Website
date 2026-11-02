@@ -463,15 +463,17 @@ def tiles(step, items):
         for k, lbl, *rest in items) + '</div>'
 
 def planner():
-    plans = [(k, lbl, nots, ic) for k, lbl, ic, _t, _q, nots in PLANS]
+    plans = [(k, lbl, "", ic) for k, lbl, ic, _t, _q, _n in PLANS]
     plan_json = json.dumps({k: {"label": lbl, "type": t, "q": q} for k, lbl, _i, t, q, _n in PLANS})
     return f'''<section class="planner" id="planner" aria-labelledby="pl-h" hidden>
-<div class="pl-head"><span class="label">What are you planning?</span><h2 id="pl-h">Find work like yours</h2><p class="muted">Three quick questions and we show you approved projects like yours. There is no cost calculator here: every house is different, so we talk that through with you in person.</p></div>
-<p class="pl-progress" aria-live="polite"><span data-pl-step>Step 1 of 3</span></p>
-<fieldset class="pl-step" data-n="1"><legend>What type of property is it?</legend>{tiles("property", PROPERTY)}</fieldset>
-<fieldset class="pl-step" data-n="2" hidden><legend>How many floors does it have now?</legend>{tiles("floors", FLOORS)}</fieldset>
-<fieldset class="pl-step" data-n="3" hidden><legend>What are you planning?</legend>{tiles("plan", plans)}</fieldset>
-<div class="pl-result" data-n="4" hidden tabindex="-1">
+<div class="pl-head"><span class="label">What are you planning?</span><h2 id="pl-h">Find work like yours</h2><p class="muted">Two quick questions and we show you approved projects like yours, nearest first. Every house is different, so we talk costs through with you in person.</p></div>
+<p class="pl-progress" aria-live="polite"><span data-pl-step>Step 1 of 2</span></p>
+<fieldset class="pl-step" data-n="1"><legend>What are you planning?</legend>{tiles("plan", plans)}</fieldset>
+<fieldset class="pl-step" data-n="2" hidden><legend>Where is the property?</legend>
+<div class="pl-where"><label class="fl fl-search"><span>Town or postcode</span><input id="pl-place" type="text" autocomplete="postal-code" placeholder="e.g. Potters Bar or EN4"></label>
+<button type="button" class="btn btn-accent" data-pl-where>Show projects</button><button type="button" class="pl-back" data-pl-skip>Skip this</button></div>
+<p class="pl-hint" data-pl-hint aria-live="polite"></p></fieldset>
+<div class="pl-result" data-n="3" hidden tabindex="-1">
 <h3 data-pl-summary></h3>
 <p data-pl-count class="lede"></p>
 <div class="actions"><button type="button" class="btn btn-accent" data-pl-show>Show me these projects</button><a class="btn btn-navy" data-pl-enquire href="contact.html">Talk it through with us</a><a class="btn btn-line" href="tel:{PHONE_TEL}">Call {PHONE}</a></div>
@@ -582,7 +584,7 @@ pages["projects.html"] = shell("projects.html", "Projects and map | Town & Count
  "Search hundreds of approved extensions, loft conversions, new homes and conversions across North London and Hertfordshire, on a map or in a list, each linked to the council's decision.",
  page_head("Projects and map", "Projects we have taken through planning", "Every project here received planning approval. Search once and the map and the list both update. Select a pin or Show on map to see each job and its council record.")
  + f'''<section class="section"><div class="wrap">
-<div class="pm-head"><p class="pm-help" hidden><button type="button" class="btn btn-line" id="pl-open" aria-expanded="false" aria-controls="planner">Not sure what to search for? Answer three quick questions</button></p></div>
+<div class="pm-head"><p class="pm-help" hidden><button type="button" class="btn btn-line" id="pl-open" aria-expanded="false" aria-controls="planner">Not sure what to search for? Answer two quick questions</button></p></div>
 {planner()}
 {filters(True)}
 <div class="map-wrap pm-map"><div id="map" role="region" aria-label="Map of the projects listed below"></div></div>
