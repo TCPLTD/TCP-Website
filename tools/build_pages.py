@@ -200,10 +200,24 @@ Q = [("Following on from a recommendation from a friend and various talks with o
      ("Martin from Town & Country Planning Ltd had been recommended to us by some local friends. We found Martin incredibly helpful and he spent some time trying to understand our exact requirements. He explained in detail how our plans would be impacted by the council regulations to ensure we were making informed decisions. Martin has extensive experience with the council which enabled us to track progress and make changes that enabled us to secure permission in a timely manner.", "Mr and Mrs Mohammed", "Mill Hill"),
      ("Between me and my next door neighbour we have used this company no more than four times in as many years. This says it all really. Fantastic service, would recommend this company over and over again. Thanks for everything Town & Country Planning Ltd.", "Mr Austin", "Borehamwood"),
      ("Our builder has a long standing work relationship with Martin and introduced us to him. We found Martin to be extremely competent as he drew up our plans quickly and accurately, and offered ideas and suggestions we had not thought of ourselves. Martin has experience and contacts with the local council so was able to guide us in what is acceptable and likely to get planning permission approval. We were so impressed with Martin's work on our first extension that we are now using him to draw up plans for our second!", "Mr & Mrs O'Grady", "Borehamwood")]
+# For the carousel: a short heading and a passage copied word for word from each review above (same order as Q).
+Q_SHORT = [("Our ideas made real", "&hellip;it was reassuring Martin was there to listen and make our ideas and dreams into reality, and he closely worked with our builder at all times."),
+           ("A personal service", "&hellip;producing innovative and creative designs and achieving planning consent for our projects. A personal service with a big practice feel."),
+           ("First class support", "&hellip;the level of knowledge, advice and support is first class. I would not hesitate in recommending them to anyone embarking on a building project."),
+           ("Approved first time", "The information produced by TCP was accepted and approved on the first occasion by the Local Authority Planning and Building Control departments."),
+           ("Put us at ease", "As novices, he put us at ease, so when we finally embarked on the build, we were fully prepared and the building works were successfully completed without any problems."),
+           ("So helpful", "Having never carried out work on a property before, he was so helpful and explained everything that needed doing."),
+           ("Made the most of our options", "From start to finish your knowledge and advice was a huge plus for us in maximising our options&hellip;"),
+           ("Permission in good time", "Martin has extensive experience with the council which enabled us to track progress and make changes that enabled us to secure permission in a timely manner."),
+           ("Back again and again", "Between me and my next door neighbour we have used this company no more than four times in as many years. This says it all really."),
+           ("Back for a second extension", "We were so impressed with Martin's work on our first extension that we are now using him to draw up plans for our second!")]
+for _h, _x in Q_SHORT:
+    assert _x.replace("&hellip;", "") in "".join(t for t, _n, _p in Q).replace("&hellip;", ""), _x
+
 def quote_html(i):
     t, n, place = Q[i]
     t = t.replace("&hellip;", "\x00"); t = esc(t).replace("\x00", "&hellip;")
-    return f'<figure class="quote"><span class="stars" aria-label="Five stars">★★★★★</span><blockquote>&ldquo;{t}&rdquo;</blockquote><figcaption>{esc(n)}, {esc(place)}</figcaption></figure>'
+    return f'<figure class="quote" id="review-{i+1}"><span class="stars" aria-label="Five stars">★★★★★</span><blockquote>&ldquo;{t}&rdquo;</blockquote><figcaption>{esc(n)}, {esc(place)}</figcaption></figure>'
 def quotes(idx): return '<div class="quotes">' + "".join(quote_html(i) for i in idx) + '</div>'
 def reviews_top():
     return f'''<div class="reviews-top"><div><span class="label">Reviews</span><h3>Worked with us? We would value your review.</h3><p class="muted">Most of our work comes from recommendation. A short Google review helps the next homeowner find us.</p></div>
@@ -279,16 +293,18 @@ def page_head(label, h1, lede, cls="band"):
 GOOGLE_REVIEW_LIST = []
 
 def review_slides():
-    items = [(t, n, p, "Google review") for t, n, p in GOOGLE_REVIEW_LIST] + [(t, n, p, "Client testimonial") for t, n, p in Q]
+    items = [(None, t, n, p, "Google review", None) for t, n, p in GOOGLE_REVIEW_LIST] + [(Q_SHORT[k][0], Q_SHORT[k][1], n, p, "Client testimonial", k) for k, (t, n, p) in enumerate(Q)]
     total = len(items)
     out = []
-    for i, (t, n, place, src) in enumerate(items):
+    for i, (head, t, n, place, src, k) in enumerate(items):
         t = t.replace("&hellip;", "\x00"); t = esc(t).replace("\x00", "&hellip;")
+        head_html = f'<h3 class="rv-head">{esc(head)}</h3>' if head else ''
+        more = f' <a class="rv-more" href="reviews.html#review-{k+1}">Read the full review</a>' if k is not None else ''
         who = esc(n) + (f", {esc(place)}" if place else "")
         g = ' rv-google' if src == "Google review" else ''
         out.append(f'<figure class="rv-slide{g}{" is-on" if i == 0 else ""}" role="group" aria-roledescription="slide" aria-label="{i+1} of {total}">'
                    f'<div class="rv-top"><span class="stars" aria-label="Five stars">★★★★★</span><span class="rv-src">{src}</span></div>'
-                   f'<blockquote>&ldquo;{t}&rdquo;</blockquote><figcaption>{who}</figcaption></figure>')
+                   f'{head_html}<blockquote>&ldquo;{t}&rdquo;</blockquote><figcaption>{who}{more}</figcaption></figure>')
     return "".join(out), total
 
 def reviews_carousel():
@@ -372,7 +388,12 @@ def featured_page(i):
         + '</li>' for a in reversed(p.get("approvals", [])))
     council = p["borough"] if p["borough"] != "Other" else "Local council"
     tour = f'<a class="btn btn-line" href="{esc(p["tour"])}" target="_blank" rel="noopener">3D tour</a>' if p.get("tour") else ""
-    body = (page_head(f"Featured project · {esc(p['type'])}", esc(f["title"]), esc(f["project"]))
+    crumbs = f'<nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Home</a> <span aria-hidden="true">›</span> <a href="projects.html">Projects and map</a> <span aria-hidden="true">›</span> <span aria-current="page">{esc(f["title"])}</span></nav>'
+    more = [FEATURED[(i + k) % len(FEATURED)] for k in (1, 2, 3)]
+    more_html = "".join(featured_card(mf, mp, k, 3).replace(' role="group" aria-roledescription="slide"', '') for k, (mf, mp) in enumerate(more))
+    plan_word = {"Extension": "an extension", "Extension and loft": "an extension or loft conversion", "Loft conversion": "a loft conversion", "New homes": "a new home",
+                 "Outbuildings and garages": "a garden room or garage conversion", "Flats and change of use": "a conversion to flats", "Porch and front": "a new porch"}.get(p["type"], "something similar")
+    body = (page_head(f"Featured project · {esc(p['type'])}", esc(f["title"]), esc(f["project"])).replace('<div class="wrap stack">', '<div class="wrap stack">' + crumbs, 1)
      + f'''<section class="section"><div class="wrap case">
 <div class="case-gallery">{gal}</div>
 <div class="case-body">
@@ -388,8 +409,9 @@ def featured_page(i):
 <dt>Type of work</dt><dd>{esc(p["type"])}</dd>
 </dl><a class="btn btn-navy" href="projects.html#{p["id"]}">See it on the map</a>{tour}<a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Talk to us about yours</a></aside>
 </div>
-<nav class="case-next" aria-label="More featured projects"><a href="{feat_url(pp)}"><span class="label">Previous project</span><strong>{esc(pf["title"])}</strong></a><a href="{feat_url(np_)}" class="nx"><span class="label">Next project</span><strong>{esc(nf["title"])}</strong></a></nav>
-</div></section>''' + CLOSING)
+<div class="cta-box case-cta"><div><span class="label">Your project</span><h2>Planning {plan_word}?</h2><p>Tell us about your house and what you have in mind. We will tell you honestly what is likely to be approved.</p></div><div class="actions"><a class="btn btn-accent" href="tel:{PHONE_TEL}">Call {PHONE}</a><a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Send an enquiry</a></div></div>
+<div><div class="section-head" style="margin-bottom:24px"><h2 style="font-size:1.5rem">More projects</h2><a class="more" href="projects.html">All projects and the map</a></div><div class="fp-grid">{more_html}</div></div>
+</div></section>''')
     return shell(feat_url(p), f'{f["title"]} | Town & Country Planning Ltd',
                  f'{f["project"]}. Approved {feat_years(p)}. Design, drawings and planning application by Town & Country Planning Ltd.', body)
 
@@ -502,7 +524,7 @@ HOME_FAQ = [
   ("Do you deal with the council for me?", "Yes. We submit the application on your behalf and deal with the planning officer from start to finish, so you don't have to."),
   ("Do I need building regulations approval too?", "Almost always, yes, even when you don't need planning permission. Once planning is approved, we prepare the building control drawings your builder needs.")]
 _FAQ_ALL = {q: a for _g, items in FAQ for q, a in items}
-def faq_item(q, a): return f'<details><summary>{q}</summary><p>{a}</p></details>'
+def faq_item(q, a, open_=False): return f'<details{" open" if open_ else ""}><summary>{q}</summary><p>{a}</p></details>'
 def faq_list(qs): return '<div class="faq">' + "".join(faq_item(q, _FAQ_ALL[q]) for q in qs) + '</div>'
 
 # The home page figure counts every approval in data/projects.js, rounded down to the nearest 50,
@@ -550,7 +572,7 @@ pages["index.html"] = shell("index.html",
 </div></section>
 <section class="section"><div class="wrap" style="max-width:900px">
 <div class="section-head"><div class="stack"><span class="label">Questions</span><h2>Frequently asked questions</h2></div><a class="more" href="faq.html">All questions</a></div>
-''' + '<div class="faq">' + "".join(faq_item(q, a) for q, a in HOME_FAQ) + '</div>' + '''
+''' + '<div class="faq">' + "".join(faq_item(q, a, k == 0) for k, (q, a) in enumerate(HOME_FAQ)) + '</div>' + '''
 </div></section>
 ''' + CLOSING,
  scripts=("js/carousel.js",))
