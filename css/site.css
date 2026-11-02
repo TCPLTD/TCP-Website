@@ -509,3 +509,9 @@ form.enquiry .btn { margin-top: 10px; }
 .pm-note { font-size: 0.9rem; margin: 0 0 24px; }
 .pin-feature { display: inline-block; margin-top: 8px; font-weight: 700; }
 .pm-help { margin: 8px 0 0; }
+
+/* ---------- Home: why us ---------- */
+.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 56px; align-items: center; }
+.why .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; border-top: none; padding-top: 0; }
+.why .facts > div { padding-left: 16px; border-left: 3px solid var(--accent); }
+@media (max-width: 480px) { .why .facts { grid-template-columns: 1fr; } }

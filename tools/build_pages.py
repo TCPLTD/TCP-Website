@@ -9,8 +9,8 @@ PHONE, PHONE_TEL, EMAIL = "07843 561129", "07843561129", "martin@tcpltd.net"
 GOOGLE_REVIEWS = "https://www.google.com/search?q=Town+%26+Country+Planning+Ltd+Cockfosters"  # replace with the Google review link when available
 
 NAV = [("index.html", "Home"), ("projects.html", "Projects and map"), ("services.html", "Services"),
-       ("areas.html", "Areas we cover"), ("process.html", "How we work"), ("faq.html", "FAQ"), ("fees.html", "Fees"), ("reviews.html", "Reviews"),
-       ("about.html", "About us"), ("contact.html", "Contact")]
+       ("process.html", "How we work"), ("reviews.html", "Reviews"), ("about.html", "About us"), ("faq.html", "FAQ"),
+       ("contact.html", "Contact")]
 
 # ---------------- Areas ----------------
 # level = how much of our work is there (from our project records): 4 most, 1 least.
@@ -153,7 +153,7 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 <footer class="site-footer">
 <div class="wrap">
 <div><h3>Town &amp; Country Planning Ltd</h3><ul><li>Planning and design consultants</li><li>Cockfosters, Barnet EN4</li><li>[Company number]</li></ul></div>
-<div><h3>Explore</h3><ul><li><a href="projects.html">Projects and map</a></li><li><a href="services.html">Services</a></li><li><a href="fees.html">Fees</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
+<div><h3>Explore</h3><ul><li><a href="projects.html">Projects and map</a></li><li><a href="areas.html">Areas we cover</a></li><li><a href="services.html">Services</a></li><li><a href="fees.html">Fees</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
 <div><h3>Areas</h3><ul>{footer_areas}<li><a href="areas.html">All areas</a></li></ul></div>
 <div><h3>Contact</h3><ul><li><a href="tel:{PHONE_TEL}">{PHONE}</a></li><li><a href="mailto:{EMAIL}">{EMAIL}</a></li><li>© <span id="year">2026</span> Town &amp; Country Planning Ltd</li></ul></div>
 </div>
@@ -518,7 +518,7 @@ pages["index.html"] = shell("index.html",
  "Town & Country Planning Ltd | Planning drawings and permission, North London and Hertfordshire",
  "Independent planning and design practice in Cockfosters. Extensions, loft conversions and new homes taken from first idea to planning approval and building control since 2005. Call 07843 561129.",
  hero("We design it, draw it and take it through planning.",
-      "Town &amp; Country Planning is an independent practice in Cockfosters. Since 2005 we have worked on hundreds of extensions, loft conversions and new homes across North London and Hertfordshire, from the first conversation to approved plans.",
+      "An independent practice in Cockfosters. Since 2005 we have designed extensions, loft conversions and new homes across North London and Hertfordshire, and taken them through planning.",
       f'<div class="actions"><a class="btn btn-accent" href="projects.html">See our projects</a><a class="btn btn-ghost" href="tel:{PHONE_TEL}">Call {PHONE}</a></div>', slides=True)
  + '''<section class="trust"><div class="wrap">
 <div><strong>Since 2005</strong><span>Independent, based in Cockfosters</span></div>
@@ -526,41 +526,23 @@ pages["index.html"] = shell("index.html",
 <div><strong>One team, start to finish</strong><span>Survey, design, planning, building control</span></div>
 <div><strong>Built on recommendation</strong><span>Clients return and refer their friends</span></div>
 </div></section>
-<section class="section"><div class="wrap intro">
-<div class="stack" style="gap:20px">
-<span class="label">About the practice</span>
-<h2>Good design, and the planning knowledge to get it approved.</h2>
-<p class="lede">You want more space, a better layout or a new home, and you want to know it will get through planning. We design something that works for you and suits your house, your street and the council's policies, then handle the application for you.</p>
-<p class="muted">Most of our clients are homeowners planning their first extension or loft conversion, and we also work with builders, developers and commercial clients. We start by visiting the property, telling you honestly what is likely to be approved and what you may be able to build without planning permission at all.</p>
-<p class="muted">From there the same small team measures, designs, submits and deals with the planning officer. You always know who you are talking to and where your application stands. Once you have approval, we prepare the building control drawings your builder needs.</p>
-<div class="facts"><div><strong>Local knowledge</strong><span>Years of applications with the same councils</span></div><div><strong>Clear drawings</strong><span>Produced in CAD for planners and builders</span></div><div><strong>Kept informed</strong><span>Updates at every stage of the application</span></div><div><strong>Honest advice</strong><span>What is likely to be approved, before you spend money</span></div></div>
-<div><a class="more" href="about.html">More about us</a></div>
-</div>
-<div class="mosaic"><div class="ph"><span>Photo: finished extension</span></div><div class="ph"><span>Photo: team on site</span></div><div class="ph"><span>Photo: drawings</span></div></div>
-</div></section>
-<section class="section band"><div class="wrap">
-<div class="section-head"><div class="stack"><span class="label">What we do</span><h2>Services for every scale of project</h2></div><a class="more" href="services.html">All services</a></div>
+<section class="section"><div class="wrap">
+<div class="section-head"><div class="stack"><span class="label">What are you planning?</span><h2>From a rear extension to a new home</h2></div><a class="more" href="projects.html#planner">Not sure? Find work like yours</a></div>
 ''' + service_tiles() + '''
 </div></section>
-<section class="section"><div class="wrap">
-<div class="section-head"><div class="stack"><span class="label">Featured projects</span><h2>Projects we have taken through planning</h2><p class="muted">A few of our approved projects. Select one for photos, the planning decision and the story behind it.</p></div><a class="more" href="projects.html">View all projects</a></div>
+<section class="section band"><div class="wrap">
+<div class="section-head"><div class="stack"><span class="label">Our work</span><h2>Recent approved projects</h2></div><a class="more" href="projects.html">Search all projects on the map</a></div>
 ''' + featured_carousel() + '''
 </div></section>
-<section class="section band"><div class="wrap">
-<div class="section-head"><div class="stack"><span class="label">What are you planning?</span><h2>Start with your house</h2><p class="muted">Choose your type of property and tell us what you have in mind. We will show you approved projects like yours.</p></div><a class="more" href="projects.html#planner">Find work like yours</a></div>
-''' + planner_teaser() + '''
-</div></section>
-<section class="section paper"><div class="wrap map-split">
-<div class="stack" style="gap:20px"><span class="label">Project map</span><h2>See what we have done on your road</h2><p class="lede">Each pin is an approved project. Open one for photos, a short description and a link to the approved plans on the council's website.</p><div><a class="btn btn-navy" href="projects.html#map">Open the full map and search</a></div></div>
-<div class="map-wrap map-small"><div id="map" role="region" aria-label="Map of approved projects"></div></div>
+<section class="section"><div class="wrap why">
+<div class="stack" style="gap:20px"><span class="label">Why us</span><h2>Good design, and the planning knowledge to get it approved.</h2>
+<p class="lede">We design something that works for you and suits your house, your street and the council's policies. Then the same small team handles the application, so you always know who you are talking to and where it stands.</p>
+<div><a class="more" href="about.html">More about us</a></div></div>
+<div class="facts"><div><strong>Honest advice</strong><span>What is likely to be approved, before you spend money</span></div><div><strong>Local knowledge</strong><span>Years of applications with the same councils</span></div><div><strong>Clear drawings</strong><span>Produced in CAD for planners and builders</span></div><div><strong>Kept informed</strong><span>Updates at every stage of the application</span></div></div>
 </div></section>
 <section class="section band-navy"><div class="wrap stack" style="gap:48px">
-<div class="section-head" style="margin:0"><div class="stack"><span class="label">How we work</span><h2>Five steps from idea to approval</h2><p>Householder applications are normally decided within eight weeks of the council validating them.</p></div><a class="more" href="process.html">How we work</a></div>
+<div class="section-head" style="margin:0"><div class="stack"><span class="label">How we work</span><h2>Five steps from idea to approval</h2></div><a class="more" href="process.html">How we work</a></div>
 ''' + timeline() + '''
-</div></section>
-<section class="section"><div class="wrap areas-layout">
-<div class="stack" style="gap:20px"><span class="label">Areas we cover</span><h2>Rooted in Barnet and Hertfordshire, working well beyond.</h2><p class="lede">Most of our work is within a few miles of Cockfosters, and we regularly take on projects across North London and Hertfordshire. Pick an area to see the towns we work in and projects nearby.</p><div><a class="btn btn-navy" href="areas.html">Explore areas</a></div></div>
-''' + tilemap() + '''
 </div></section>
 <section class="section band" id="reviews"><div class="wrap">
 <div class="section-head"><div class="stack"><span class="label">Client reviews</span><h2>What our clients say</h2></div><a class="more" href="reviews.html">All reviews</a></div>
@@ -570,17 +552,15 @@ pages["index.html"] = shell("index.html",
 <div class="section-head"><div class="stack"><span class="label">Questions</span><h2>Frequently asked questions</h2></div><a class="more" href="faq.html">All questions</a></div>
 ''' + '<div class="faq">' + "".join(faq_item(q, a) for q, a in HOME_FAQ) + '</div>' + '''
 </div></section>
-<section class="section-sm"><div class="wrap"><div class="cta-box"><div><span class="label">Fees</span><h2>What will my design cost?</h2><p>Answer three quick questions to see what is included for your type of project.</p></div><a class="btn btn-accent" href="fees.html">Estimate my fee</a></div></div></section>
 ''' + CLOSING,
- extra_head=LEAFLET, scripts=("data/projects.js", "data/featured.js") + MAPJS + ("js/carousel.js",))
+ scripts=("js/carousel.js",))
 
 # ---------------- Projects and map (one page) ----------------
 pages["projects.html"] = shell("projects.html", "Projects and map | Town & Country Planning Ltd",
  "Search hundreds of approved extensions, loft conversions, new homes and conversions across North London and Hertfordshire, on a map or in a list, each linked to the council's decision.",
- page_head("Projects and map", "Projects we have taken through planning", "Every project here received planning approval. Search or filter once and both the map and the list update. Pins mark the street, never the house.")
+ page_head("Projects and map", "Projects we have taken through planning", "Every project here received planning approval. Search once and the map and the list both update. Select a pin or Show on map to see each job and its council record.")
  + f'''<section class="section"><div class="wrap">
-<div class="pm-head"><h2 id="pm-h">Search our approved projects</h2><p class="muted">Type a street, town or postcode, or choose a type of work, and the map and list below both update. Select a pin, or <strong>Show on map</strong> on any project, to see every job at that address with its council link.</p>
-<p class="pm-help" hidden><button type="button" class="btn btn-line" id="pl-open" aria-expanded="false" aria-controls="planner">Not sure what to search for? Answer three quick questions</button></p></div>
+<div class="pm-head"><p class="pm-help" hidden><button type="button" class="btn btn-line" id="pl-open" aria-expanded="false" aria-controls="planner">Not sure what to search for? Answer three quick questions</button></p></div>
 {planner()}
 {filters(True)}
 <div class="map-wrap pm-map"><div id="map" role="region" aria-label="Map of the projects listed below"></div></div>
