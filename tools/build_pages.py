@@ -8,7 +8,7 @@ SITE = "https://townandcountryplanningltd.co.uk/"
 PHONE, PHONE_TEL, EMAIL = "07843 561129", "07843561129", "martin@tcpltd.net"
 GOOGLE_REVIEWS = "https://www.google.com/search?q=Town+%26+Country+Planning+Ltd+Cockfosters"  # replace with the Google review link when available
 
-NAV = [("index.html", "Home"), ("projects.html", "Projects"), ("map.html", "Project map"), ("services.html", "Services"),
+NAV = [("index.html", "Home"), ("projects.html", "Projects and map"), ("services.html", "Services"),
        ("areas.html", "Areas we cover"), ("process.html", "How we work"), ("faq.html", "FAQ"), ("fees.html", "Fees"), ("reviews.html", "Reviews"),
        ("about.html", "About us"), ("contact.html", "Contact")]
 
@@ -153,7 +153,7 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 <footer class="site-footer">
 <div class="wrap">
 <div><h3>Town &amp; Country Planning Ltd</h3><ul><li>Planning and design consultants</li><li>Cockfosters, Barnet EN4</li><li>[Company number]</li></ul></div>
-<div><h3>Explore</h3><ul><li><a href="projects.html">Projects</a></li><li><a href="map.html">Project map</a></li><li><a href="services.html">Services</a></li><li><a href="fees.html">Fees</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
+<div><h3>Explore</h3><ul><li><a href="projects.html">Projects and map</a></li><li><a href="services.html">Services</a></li><li><a href="fees.html">Fees</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
 <div><h3>Areas</h3><ul>{footer_areas}<li><a href="areas.html">All areas</a></li></ul></div>
 <div><h3>Contact</h3><ul><li><a href="tel:{PHONE_TEL}">{PHONE}</a></li><li><a href="mailto:{EMAIL}">{EMAIL}</a></li><li>© <span id="year">2026</span> Town &amp; Country Planning Ltd</li></ul></div>
 </div>
@@ -386,7 +386,7 @@ def featured_page(i):
 <dt>Council</dt><dd>{esc(council)}</dd>
 <dt>Planning decision</dt><dd>Approved {feat_years(p)}</dd>
 <dt>Type of work</dt><dd>{esc(p["type"])}</dd>
-</dl><a class="btn btn-navy" href="map.html#{p["id"]}">See it on the map</a>{tour}<a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Talk to us about yours</a></aside>
+</dl><a class="btn btn-navy" href="projects.html#{p["id"]}">See it on the map</a>{tour}<a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Talk to us about yours</a></aside>
 </div>
 <nav class="case-next" aria-label="More featured projects"><a href="{feat_url(pp)}"><span class="label">Previous project</span><strong>{esc(pf["title"])}</strong></a><a href="{feat_url(np_)}" class="nx"><span class="label">Next project</span><strong>{esc(nf["title"])}</strong></a></nav>
 </div></section>''' + CLOSING)
@@ -491,7 +491,7 @@ FAQ = [("Getting started", [
   ("Do you deal with the council for me?", "Yes. We submit the application as your agent and deal with the planning officer from start to finish, so you do not have to."),
   ("Do you prepare building control drawings?", "Yes. After planning approval we prepare the detailed drawings needed for building regulations, including construction details, specification and drainage, and coordinate structural calculations where needed."),
   ("Can you recommend a builder?", "Yes. We have worked with reliable builders across North London and Hertfordshire for many years and are happy to suggest some when you reach the build stage."),
-  ("Can I see work you have done near me?", "Yes. Our <a href=\"map.html\">project map</a> shows hundreds of approved projects, each linked to the council's record, and you can <a href=\"projects.html\">search them</a> by street, town or type of work."),
+  ("Can I see work you have done near me?", "Yes. Our <a href=\"projects.html\">projects page</a> shows hundreds of approved projects on a map and in a list, each linked to the council's record. Search by street, town or type of work."),
   ("Which areas do you cover?", "Mainly North London and Hertfordshire, and further afield by arrangement. See <a href=\"areas.html\">areas we cover</a>.")])]
 HOME_FAQ = ["Do I always need planning permission for an extension?", "How long does planning permission take?", "Do you come to the property?", "How much will it cost?", "Can I see work you have done near me?"]
 _FAQ_ALL = {q: a for _g, items in FAQ for q, a in items}
@@ -540,7 +540,7 @@ pages["index.html"] = shell("index.html",
 ''' + planner_teaser() + '''
 </div></section>
 <section class="section paper"><div class="wrap map-split">
-<div class="stack" style="gap:20px"><span class="label">Project map</span><h2>See what we have done on your road</h2><p class="lede">Each pin is an approved project. Open one for photos, a short description and a link to the approved plans on the council's website.</p><div><a class="btn btn-navy" href="map.html">Open the full map</a></div></div>
+<div class="stack" style="gap:20px"><span class="label">Project map</span><h2>See what we have done on your road</h2><p class="lede">Each pin is an approved project. Open one for photos, a short description and a link to the approved plans on the council's website.</p><div><a class="btn btn-navy" href="projects.html#map">Open the full map and search</a></div></div>
 <div class="map-wrap map-small"><div id="map" role="region" aria-label="Map of approved projects"></div></div>
 </div></section>
 <section class="section band-navy"><div class="wrap stack" style="gap:48px">
@@ -561,33 +561,27 @@ pages["index.html"] = shell("index.html",
 </div></section>
 <section class="section-sm"><div class="wrap"><div class="cta-box"><div><span class="label">Fees</span><h2>What will my design cost?</h2><p>Answer three quick questions to see what is included for your type of project.</p></div><a class="btn btn-accent" href="fees.html">Estimate my fee</a></div></div></section>
 ''' + CLOSING,
- extra_head=LEAFLET, scripts=("data/projects.js",) + MAPJS + ("js/carousel.js",))
+ extra_head=LEAFLET, scripts=("data/projects.js", "data/featured.js") + MAPJS + ("js/carousel.js",))
 
-# ---------------- Projects ----------------
-pages["projects.html"] = shell("projects.html", "Our projects | Town & Country Planning Ltd",
- "Approved extensions, loft conversions, new homes and conversions across North London and Hertfordshire. Search by town or type of work.",
- page_head("Projects", "Projects we have taken through planning", "Every project here received planning approval. Search by street, town or type of work, or choose an area.")
+# ---------------- Projects and map (one page) ----------------
+pages["projects.html"] = shell("projects.html", "Projects and map | Town & Country Planning Ltd",
+ "Search hundreds of approved extensions, loft conversions, new homes and conversions across North London and Hertfordshire, on a map or in a list, each linked to the council's decision.",
+ page_head("Projects and map", "Projects we have taken through planning", "Every project here received planning approval. Search or filter once and both the map and the list update. Pins mark the street, never the house.")
  + f'''<section class="section"><div class="wrap">
+<div class="pm-head"><h2 id="pm-h">Search our approved projects</h2><p class="muted">Type a street, town or postcode, or choose a type of work, and the map and list below both update. Select a pin, or <strong>Show on map</strong> on any project, to see every job at that address with its council link.</p>
+<p class="pm-help" hidden><button type="button" class="btn btn-line" id="pl-open" aria-expanded="false" aria-controls="planner">Not sure what to search for? Answer three quick questions</button></p></div>
 {planner()}
 {filters(True)}
+<div class="map-wrap pm-map"><div id="map" role="region" aria-label="Map of the projects listed below"></div></div>
+<p class="muted pm-note">Numbers on the map show several projects close together: select one to zoom in.</p>
 <div class="grid" id="project-list"></div>
 <div class="load-more"><button type="button" class="btn btn-line" id="project-more" hidden>Show more projects</button></div>
-</div></section>''' + CLOSING, scripts=("data/projects.js", "js/projects.js", "js/planner.js"))
-
-# ---------------- Map ----------------
-pages["map.html"] = shell("map.html", "Project map | Town & Country Planning Ltd",
- "Map of our approved planning projects across North London and Hertfordshire, with photos and links to the approved plans.",
- page_head("Project map", "Approved projects near you", "Every pin is a project that received planning approval. Numbers show where several projects sit close together: select one to zoom in. Pins mark the street, never the house.")
- + '''<section class="section-sm"><div class="wrap stack" style="gap:16px">
-<div class="filter-panel map-filters"><div class="filter-row"><label class="fl fl-search"><span>Find a street or town</span><input id="map-search" type="search" placeholder="e.g. Potters Bar, EN4 or loft"></label>
-<label class="fl"><span>Type of work</span><select id="map-type"><option value="">All types</option></select></label>
-<label class="fl"><span>Area</span><select id="map-area"><option value="">All areas</option></select></label>
-<button type="button" class="btn btn-line btn-clear" id="map-reset" hidden>Reset map</button></div>
-<p class="map-count" id="map-count" aria-live="polite"></p></div>
-<div class="map-wrap"><div id="map" role="region" aria-label="Map of approved projects"></div></div>
-<div class="map-results" id="map-results" hidden><h2 class="map-results-head" id="map-results-head"></h2><ul class="result-list" id="map-results-list"></ul><button type="button" class="btn btn-line" id="map-results-more" hidden>Show more</button></div>
-<p class="muted">Prefer a list? <a href="projects.html">Search all projects</a> or <a href="areas.html">browse by area</a>.</p>
-</div></section>''' + CLOSING, extra_head=LEAFLET, scripts=("data/projects.js",) + MAPJS)
+</div></section>
+<section class="section band"><div class="wrap">
+<div class="section-head"><div class="stack"><span class="label">Featured projects</span><h2>A closer look</h2><p class="muted">Photos, the planning decision and the story behind some of our projects.</p></div></div>
+{featured_carousel()}
+</div></section>''' + CLOSING, extra_head=LEAFLET,
+ scripts=("data/projects.js", "data/featured.js", "js/projects.js", "js/planner.js") + MAPJS + ("js/carousel.js",))
 
 # ---------------- Services ----------------
 SV = [("extensions", "Extensions", "An extension is the most common way to gain space without moving. We design single and two storey rear extensions, side returns, wraparounds and over-garage extensions that suit the house and stand a strong chance of approval. Many single storey extensions can be built under permitted development; we check that first, because it can save you time and fees.",
@@ -651,7 +645,7 @@ for i, a in enumerate(AREAS):
 ''' + CLOSING)
     pages[f"area-{slug}.html"] = shell(f"area-{slug}.html", f"Planning drawings in {name} | Town & Country Planning Ltd",
         f"Extensions, loft conversions and new homes in {name}: {', '.join(towns[:4])} and nearby. Planning drawings and applications by Town & Country Planning Ltd. Call {PHONE}.",
-        body, extra_head=LEAFLET, scripts=("data/projects.js", "js/projects.js") + MAPJS)
+        body, extra_head=LEAFLET, scripts=("data/projects.js", "data/featured.js", "js/projects.js") + MAPJS)
 
 # ---------------- Process ----------------
 pages["process.html"] = shell("process.html", "How we work | Town & Country Planning Ltd",
@@ -777,6 +771,7 @@ for name, doc in pages.items():
 redirect = lambda target, title: f'''<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>{title}</title><meta http-equiv="refresh" content="0; url={target}"><link rel="canonical" href="{SITE}{target}"><meta name="robots" content="noindex"></head><body><p>This page has moved to <a href="{target}">{target}</a>.</p></body></html>
 '''
 open(os.path.join(OUT, "gallery.html"), "w").write(redirect("projects.html", "Our projects"))
+open(os.path.join(OUT, "map.html"), "w").write(redirect("projects.html", "Projects and map").replace("</head>", "<script>location.replace('projects.html' + (location.hash || '#map'));</script></head>"))
 urls = [""] + [n for n in pages if n not in ("index.html", "404.html")]
 open(os.path.join(OUT, "sitemap.xml"), "w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(f"  <url><loc>{SITE}{u}</loc></url>\n" for u in urls) + "</urlset>\n")
 open(os.path.join(OUT, "robots.txt"), "w").write(f"User-agent: *\nAllow: /\n\nSitemap: {SITE}sitemap.xml\n")

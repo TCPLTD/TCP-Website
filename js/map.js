@@ -29,6 +29,8 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function place(p) { return p.street ? p.street + ', ' + p.town : p.town; }
 
+  var featured = {};
+  (window.TCP_FEATURED || []).forEach(function (f) { featured[f.id] = f; });
   function popup(p) {
     var img = p.photos && p.photos.length ? '<img class="pin-img" src="' + esc(p.photos[0]) + '" alt="">' : '';
     var items = (p.approvals || []).slice().reverse().map(function (a) {
@@ -40,7 +42,8 @@
       '<span class="pin-type">' + esc((p.approvals || []).length > 1 ? p.approvals.length + ' approved jobs' : (p.type === 'Other approvals' ? 'Planning approval' : p.type)) + '</span>' +
       '<strong>' + esc(place(p)) + '</strong>' +
       '<div class="meta">' + esc(p.borough === 'Other' ? 'Further afield' : p.borough) + (p.tour ? ' · <a href="' + esc(p.tour) + '" target="_blank" rel="noopener">3D tour</a>' : '') + '</div>' +
-      '<ul class="pin-list">' + items + '</ul></div>';
+      '<ul class="pin-list">' + items + '</ul>' +
+      (featured[p.id] ? '<a class="pin-feature" href="project-' + esc(p.id) + '.html">View project: photos and full story</a>' : '') + '</div>';
   }
 
   var markers = projects.map(function (p) {
@@ -61,7 +64,10 @@
   fill(typeSel, tally('type'));
   fill(areaSel, tally('borough').filter(function (b) { return b !== 'Other'; }));
 
+  // on pages with a project list, the map shows the same projects as the list (projects.js sets this)
+  var only = window.TCPFilterIds || null;
   function matches(p) {
+    if (only && !only[p.id]) return false;
     if (typeSel && typeSel.value && p.type !== typeSel.value) return false;
     if (areaSel && areaSel.value && p.borough !== areaSel.value) return false;
     var q = search ? search.value.trim().toLowerCase() : '';
@@ -151,7 +157,7 @@
     renderResults();
     group.clearLayers();
     if (group.addLayers) group.addLayers(shown); else shown.forEach(function (m) { group.addLayer(m); });
-    var filtering = (search && search.value) || (typeSel && typeSel.value) || (areaSel && areaSel.value);
+    var filtering = only || (search && search.value) || (typeSel && typeSel.value) || (areaSel && areaSel.value);
     if (count) count.textContent = filtering ? shown.length + ' of ' + markers.length + ' projects shown' : markers.length + ' approved projects on the map';
     if (reset) reset.hidden = !filtering;
     if (fit && shown.length) {
@@ -167,16 +173,24 @@
   if (reset) reset.addEventListener('click', function () { [search, typeSel, areaSel].forEach(function (f) { if (f) f.value = ''; }); draw(true); });
   draw(true);
 
-  // map.html#p012 opens that project
-  function openHash() {
-    var id = location.hash.replace('#', '');
-    if (!/^p\d+$/.test(id)) return;
+  // projects.html#p012 opens that project's pin
+  function focus(id, scroll) {
     var m = markers.filter(function (x) { return x._p.id === id; })[0];
-    if (!m) return;
-    if (!group.hasLayer(m)) { [search, typeSel, areaSel].forEach(function (f) { if (f) f.value = ''; }); draw(false); }
+    if (!m) return false;
+    if (!group.hasLayer(m)) { only = null; [search, typeSel, areaSel].forEach(function (f) { if (f) f.value = ''; }); draw(false); }
+    if (scroll) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     if (group.zoomToShowLayer) group.zoomToShowLayer(m, function () { m.openPopup(); });
     else { map.setView(m.getLatLng(), 15); m.openPopup(); }
+    return true;
   }
+  function openHash() {
+    var id = location.hash.replace('#', '');
+    if (/^p\d+$/.test(id)) focus(id, true);
+  }
+  window.TCPMap = {
+    setOnly: function (ids) { only = ids; draw(true); },
+    focus: function (id) { return focus(id, true); }
+  };
   openHash();
   window.addEventListener('hashchange', openHash);
 })();

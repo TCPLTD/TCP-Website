@@ -8,6 +8,8 @@
   // short lists (home page) show described projects first
   if (limit) all = all.filter(function (p) { return p.described; }).concat(all.filter(function (p) { return !p.described; }));
   var PAGE = 24;
+  var featuredIds = {};
+  (window.TCP_FEATURED || []).forEach(function (f) { featuredIds[f.id] = true; });
   var search = document.getElementById('project-search');
   var areaSel = document.getElementById('project-area');
   var yearSel = document.getElementById('project-year');
@@ -142,7 +144,10 @@
     if (p.tour) tags.appendChild(el('span', 'tag', '3D tour'));
     body.appendChild(tags);
     var links = el('div', 'card-links');
-    var m = el('a', '', 'View on map'); m.href = 'map.html#' + p.id; links.appendChild(m);
+    var m = el('a', '', 'Show on map'); m.href = (document.getElementById('map') ? '#' : 'projects.html#') + p.id;
+    m.addEventListener('click', function (e) { if (window.TCPMap && window.TCPMap.focus(p.id)) { e.preventDefault(); history.replaceState(null, '', '#' + p.id); } });
+    links.appendChild(m);
+    if (featuredIds[p.id]) { var v = el('a', '', 'View project'); v.href = 'project-' + p.id + '.html'; links.appendChild(v); }
     if (!many) {
       var one = (p.approvals || [])[0];
       if (one && one.link) {
@@ -180,6 +185,11 @@
     var filtering = !!(state.type || state.q || state.area || state.year || state.route);
     if (clear) clear.hidden = !filtering;
     var found = all.filter(matches);
+    // keep the map on this page showing the same projects as the list
+    var ids = null;
+    if (filtering) { ids = {}; found.forEach(function (p) { ids[p.id] = true; }); }
+    window.TCPFilterIds = ids;
+    if (window.TCPMap && !fixedBorough) window.TCPMap.setOnly(ids);
     var cap = limit || shownCount;
     var shown = found.slice(0, cap);
     if (count) count.textContent = filtering ? found.length + ' of ' + all.length + ' approved projects match' : all.length + ' approved projects';

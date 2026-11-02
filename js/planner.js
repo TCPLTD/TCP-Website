@@ -3,7 +3,15 @@
 (function () {
   var box = document.getElementById('planner');
   if (!box || !window.TCPProjects) return;
-  box.hidden = false;
+  // the questions start folded away under the search, and open from the button or a link to #planner
+  var opener = document.getElementById('pl-open');
+  function openBox(focus) {
+    box.hidden = false;
+    if (opener) { opener.setAttribute('aria-expanded', 'true'); opener.parentNode.hidden = true; }
+    if (focus) { var t = box.querySelector('.pl-step:not([hidden]) .pl-tile'); if (t) t.focus(); }
+  }
+  if (opener) { opener.parentNode.hidden = false; opener.addEventListener('click', function () { openBox(true); }); }
+  else box.hidden = false;
   var PLANS = JSON.parse(document.getElementById('pl-plans').textContent);
   var steps = box.querySelectorAll('.pl-step');
   var result = box.querySelector('.pl-result');
@@ -62,7 +70,7 @@
   restart.addEventListener('click', function () { answers = {}; labels = {}; box.querySelectorAll('.pl-tile').forEach(function (x) { x.removeAttribute('aria-pressed'); }); window.TCPProjects.set({}); go(1, true); });
   box.querySelector('[data-pl-show]').addEventListener('click', function () {
     window.TCPProjects.set(PLANS[answers.plan] || {});
-    var list = document.getElementById('project-count') || document.getElementById('project-list');
+    var list = document.querySelector('.pm-head') || document.getElementById('project-list');
     list.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
@@ -71,5 +79,6 @@
     var p = new URLSearchParams(location.search).get('property');
     var tile = p && box.querySelector('[data-step="property"][data-v="' + p + '"]');
     if (tile) { answers.property = p; labels.property = tile.getAttribute('data-label'); tile.setAttribute('aria-pressed', 'true'); go(2, false); }
+    if (tile || location.hash === '#planner') { openBox(false); box.scrollIntoView(); }
   } catch (e) {}
 })();

@@ -499,3 +499,13 @@ form.enquiry .btn { margin-top: 10px; }
 .faq-toc a:hover { text-decoration: underline; }
 .faq-group { margin-bottom: 48px; scroll-margin-top: 24px; }
 .faq-group h2 { font-size: 1.5rem; margin-bottom: 12px; }
+
+/* ---------- Projects and map (one page) ---------- */
+.pm-head { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; scroll-margin-top: 16px; }
+.pm-head h2 { font-size: 1.6rem; }
+.pm-map { margin-bottom: 8px; }
+.pm-map #map { height: 520px; }
+@media (max-width: 640px) { .pm-map #map { height: 380px; max-height: 60vh; } }
+.pm-note { font-size: 0.9rem; margin: 0 0 24px; }
+.pin-feature { display: inline-block; margin-top: 8px; font-weight: 700; }
+.pm-help { margin: 8px 0 0; }
