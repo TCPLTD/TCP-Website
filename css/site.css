@@ -79,12 +79,11 @@ p { margin: 0; }
 .brand-name { font-family: var(--display); font-weight: 700; font-size: 1.05rem; line-height: 1.2; letter-spacing: 0.01em; }
 .brand-name span { display: block; }
 @media (min-width: 1024px) {
-  /* a single white badge: the logo with the company name set beneath it, centred */
-  .brand { flex-direction: column; align-items: stretch; gap: 0; background: #FFFFFF; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.25); }
-  .brand-logo { width: auto; padding: 14px 18px 8px; border-radius: 0; background: transparent; }
+  /* the logo on its own white card, with the company name set separately beneath it, centred */
+  .brand { flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+  .brand-logo { width: 100%; padding: 12px 16px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
   .brand-logo img { max-width: 172px; margin: 0 auto; }
-  .side .brand .brand-name { color: #173B53; text-align: center; font-size: 1.15rem; padding: 10px 12px 14px; margin: 0 14px; border-top: 1px solid #D9E2EA; }
-  .brand:hover .brand-name { color: #0F2A3C; }
+  .brand-name { font-size: 1.2rem; }
   .brand:focus-visible { outline-offset: 4px; }
 }
 .side-nav { display: flex; flex-direction: column; gap: 2px; }
