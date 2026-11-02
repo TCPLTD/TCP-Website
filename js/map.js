@@ -189,6 +189,7 @@
   }
   window.TCPMap = {
     setOnly: function (ids) { only = ids; draw(true); },
+    centre: function (lat, lng) { map.setView([lat, lng], 13); },
     focus: function (id) { return focus(id, true); }
   };
   openHash();

@@ -19,6 +19,9 @@
   var back = box.querySelector('[data-pl-back]');
   var restart = box.querySelector('[data-pl-restart]');
   var answers = {}, labels = {}, now = 1;
+  var PROPERTY_WORDS = { detached: ['detached house', 'detached'], semi: ['semi-detached', 'semi detached'], terraced: ['terrace'], bungalow: ['bungalow'],
+                         flat: ['maisonette', 'ground floor flat', 'first floor flat', 'apartment'], commercial: ['commercial', 'shop', 'office', 'retail'] };
+  var FLOOR_WORDS = { f1: ['single storey', 'bungalow'], f2: ['two storey', 'first floor'], f3: ['second floor', 'three storey', 'third floor'] };
 
   function go(n, focus) {
     now = n;
@@ -69,7 +72,10 @@
   back.addEventListener('click', function () { go(Math.max(1, now - 1), true); });
   restart.addEventListener('click', function () { answers = {}; labels = {}; box.querySelectorAll('.pl-tile').forEach(function (x) { x.removeAttribute('aria-pressed'); }); window.TCPProjects.set({}); go(1, true); });
   box.querySelector('[data-pl-show]').addEventListener('click', function () {
-    window.TCPProjects.set(PLANS[answers.plan] || {});
+    var plan = PLANS[answers.plan] || {};
+    // the property and floors answers don't remove projects; they lift the closest examples to the top
+    var boost = (PROPERTY_WORDS[answers.property] || []).concat(FLOOR_WORDS[answers.floors] || []);
+    window.TCPProjects.set({ type: plan.type, q: plan.q, boost: boost });
     var list = document.querySelector('.pm-head') || document.getElementById('project-list');
     list.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });

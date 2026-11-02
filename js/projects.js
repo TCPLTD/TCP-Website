@@ -86,10 +86,10 @@
   window.TCPProjects = {
     count: function (o) {
       var keep = state; state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '' };
-      var n = all.filter(matches).length; state = keep; return n;
+      parseQuery(); var n = all.filter(matches).length; state = keep; parseQuery(); return n;
     },
     set: function (o) {
-      state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '' };
+      state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '', boost: o.boost || [] };
       if (search) search.value = o.q || '';
       if (typeSel) typeSel.value = o.type || '';
       [areaSel, yearSel, routeSel].forEach(function (f) { if (f) f.value = ''; });
@@ -97,15 +97,68 @@
     }
   };
 
+  // ---- Ranking: best match first, and nearest first when a place is typed ----
+  // Places people might type: towns, postcode districts, councils and streets, each with a centre point.
+  var PLACES = {};
+  (window.TCP_PROJECTS || []).forEach(function (p) {
+    if (typeof p.lat !== 'number') return;
+    [p.town, p.district, p.borough, p.street].forEach(function (n) {
+      if (!n || n === 'Other' || n === 'London') return;
+      var k = n.toLowerCase().replace(/'/g, '');
+      var e = PLACES[k] || (PLACES[k] = { name: n, lat: 0, lng: 0, n: 0 });
+      e.lat += p.lat; e.lng += p.lng; e.n++;
+    });
+  });
+  var parsed = { words: [], place: null };
+  // split the search into a place (if one is named) and the words describing the work
+  function parseQuery() {
+    var toks = (state.q || '').replace(/'/g, '').split(/\s+/).filter(Boolean), words = [], place = null;
+    for (var i = 0; i < toks.length;) {
+      var hit = 0;
+      for (var n = Math.min(4, toks.length - i); n >= 1; n--) {
+        var k = toks.slice(i, i + n).join(' ');
+        if (PLACES[k] && !(n === 1 && WORK_WORDS.indexOf(k) !== -1)) { place = PLACES[k]; hit = n; break; }
+      }
+      if (hit) i += hit; else { words.push(toks[i]); i++; }
+    }
+    parsed = { words: words, place: place };
+  }
+  var WORK_WORDS = ['loft', 'rear', 'side', 'front', 'garage', 'porch', 'extension', 'conversion', 'dormer', 'garden', 'flat', 'flats'];
+  function text(p) {
+    if (!p._t) p._t = [p.type].concat((p.approvals || []).map(function (a) { return (a.summary || '') + ' ' + a.route + ' ' + (a.ref || ''); })).join(' ').toLowerCase();
+    return p._t;
+  }
+  function km(p, c) {
+    if (typeof p.lat !== 'number') return 99;
+    var dy = (p.lat - c.lat / c.n) * 111, dx = (p.lng - c.lng / c.n) * 69;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function score(p) {
+    var t = text(p), s = 0, w = parsed.words, boost = state.boost || [];
+    w.forEach(function (x) { if (t.indexOf(x) !== -1) s += 2; });
+    if (w.length > 1 && t.indexOf(w.join(' ')) !== -1) s += 4;
+    boost.forEach(function (b) { if (t.indexOf(b) !== -1) s += 3; });
+    // a short description that is mostly the thing searched for is a clearer example
+    (p.approvals || []).some(function (a) {
+      var d = (a.summary || '').toLowerCase();
+      if (d && d.length < 70 && w.every(function (x) { return d.indexOf(x) !== -1; })) { s += 2; return true; }
+    });
+    if (p.described) s += 0.5;
+    s += Math.max(0, (p.year || 2000) - 2000) / 25;
+    if (parsed.place) s -= km(p, parsed.place) * 0.35;
+    p._s = s;
+    return s;
+  }
+  function ranked() { return parsed.words.length || (state.boost || []).length || parsed.place; }
+
   function matches(p) {
     if (state.type && p.type !== state.type) return false;
     if (state.area && p.borough !== state.area) return false;
     if (state.year && String(p.year) !== state.year) return false;
     if (state.route && routes(p).indexOf(state.route) === -1) return false;
-    if (state.q) {
-      var hay = [p.type, p.street, p.town, p.district, p.borough, p.year].concat((p.approvals || []).map(function (a) { return (a.summary || '') + ' ' + a.route + ' ' + (a.ref || ''); })).join(' ').toLowerCase();
-      var words = state.q.split(/\s+/);
-      for (var i = 0; i < words.length; i++) if (hay.indexOf(words[i]) === -1) return false;
+    if (parsed.words.length) {
+      var hay = [p.street, p.town, p.district, p.borough, p.year].join(' ').toLowerCase() + ' ' + text(p);
+      for (var i = 0; i < parsed.words.length; i++) if (hay.indexOf(parsed.words[i]) === -1) return false;
     }
     return true;
   }
@@ -184,22 +237,41 @@
     chips.forEach(function (c) { c.setAttribute('aria-pressed', c._type === state.type ? 'true' : 'false'); });
     var filtering = !!(state.type || state.q || state.area || state.year || state.route);
     if (clear) clear.hidden = !filtering;
+    parseQuery();
     var found = all.filter(matches);
+    if (ranked()) {
+      found.forEach(score);
+      found.sort(function (a, b) { return b._s - a._s; });
+    }
     // keep the map on this page showing the same projects as the list
     var ids = null;
     if (filtering) { ids = {}; found.forEach(function (p) { ids[p.id] = true; }); }
     window.TCPFilterIds = ids;
-    if (window.TCPMap && !fixedBorough) window.TCPMap.setOnly(ids);
+    if (window.TCPMap && !fixedBorough) {
+      window.TCPMap.setOnly(ids);
+      if (parsed.place && window.TCPMap.centre) window.TCPMap.centre(parsed.place.lat / parsed.place.n, parsed.place.lng / parsed.place.n);
+    }
     var cap = limit || shownCount;
     var shown = found.slice(0, cap);
-    if (count) count.textContent = filtering ? found.length + ' of ' + all.length + ' approved projects match' : all.length + ' approved projects';
+    var order = parsed.place ? ', closest to ' + parsed.place.name + ' first' : ranked() ? ', best matches first' : '';
+    if (count) count.textContent = (filtering && found.length < all.length ? found.length + ' of ' + all.length + ' approved projects match' : all.length + ' approved projects') + order;
     if (more) more.hidden = !!limit || found.length <= cap;
     list.innerHTML = '';
     if (!shown.length) {
       list.appendChild(el('p', 'empty', !all.length && fixedBorough ? 'Projects in ' + fixedBorough + ' are being added. Call 07843 561129 to hear about our work nearby.' : 'No projects match those filters. Try a nearby town or another type of work.'));
       return;
     }
-    shown.forEach(function (p) { list.appendChild(card(p)); });
+    var best = ranked() && !parsed.place && found.length > 3 ? found[0]._s - 1.5 : null;
+    shown.forEach(function (p, i) {
+      var c = card(p), tags = c.querySelector('.tags');
+      if (parsed.place) {
+        var miles = km(p, parsed.place) / 1.609;
+        tags.insertBefore(el('span', 'tag tag-near', miles < 0.3 ? 'In ' + parsed.place.name : miles.toFixed(1) + ' miles from ' + parsed.place.name), tags.firstChild);
+      } else if (best !== null && i < 3 && p._s >= best) {
+        tags.insertBefore(el('span', 'tag tag-best', 'Best match'), tags.firstChild);
+      }
+      list.appendChild(c);
+    });
   }
   render();
 })();

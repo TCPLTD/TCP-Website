@@ -524,3 +524,5 @@ form.enquiry .btn { margin-top: 10px; }
 .rv-head { font-size: 1.35rem; }
 .rv-more { display: inline-block; margin-left: 10px; font-weight: 600; font-size: 0.93rem; }
 .quote:target { outline: 3px solid var(--accent); outline-offset: 2px; }
+.tag-best { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.tag-near { background: var(--navy); color: var(--on-navy); border-color: var(--navy); }
