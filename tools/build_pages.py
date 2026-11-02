@@ -378,7 +378,7 @@ def featured_page(i):
     else:
         gal = '<div class="ph"><span>Photos to come</span></div><div class="ph"><span>Photo to come</span></div><div class="ph"><span>Photo to come</span></div>'
     feats = "".join(f"<li>{esc(x)}</li>" for x in f.get("features", []))
-    desc = (f'<p>{esc(f["description"])}</p>' if f.get("description") else
+    desc = ("".join(f'<p>{esc(x)}</p>' for x in f["description"].split("\n\n")) if f.get("description") else
             f'<p>We designed the scheme and prepared the drawings and planning application for this {esc(p["type"].lower())} on {esc(feat_place(p))}. {esc(p["borough"] if p["borough"] != "Other" else "The council")} approved it in {feat_years(p)}.</p>'
             '<p class="muted"><em>A fuller write-up of the brief, the design and how the application went is to come.</em></p>')
     apps = "".join(
