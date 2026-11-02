@@ -63,8 +63,11 @@
       b.setAttribute('aria-pressed', picked.indexOf(d) !== -1 ? 'true' : 'false');
       b.appendChild(document.createTextNode(d[0]));
       var c = document.createElement('span'); c.className = 'count'; c.textContent = '(' + n + ')'; b.appendChild(c);
-      // one press picks the detail and moves straight on to the next question
-      b.addEventListener('click', function () { picked = [d]; next(); });
+      b.addEventListener('click', function () {
+        var i = picked.indexOf(d);
+        if (i === -1) picked.push(d); else picked.splice(i, 1);
+        b.setAttribute('aria-pressed', i === -1 ? 'true' : 'false');
+      });
       detailBox.appendChild(b);
     });
   }
@@ -92,7 +95,7 @@
       next();
     });
   });
-  box.querySelector('[data-pl-next]').addEventListener('click', function () { picked = []; next(); });
+  box.querySelector('[data-pl-next]').addEventListener('click', next);
   function usePlace() {
     var typed = placeInput.value.trim();
     if (!typed) { place = null; next(); return; }

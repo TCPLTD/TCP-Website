@@ -469,9 +469,9 @@ def planner():
 <div class="pl-head"><span class="label">What are you planning?</span><h2 id="pl-h">Find work like yours</h2><p class="muted">A few quick questions and we show you the approved projects most like yours, nearest first. Every house is different, so we talk costs through with you in person.</p></div>
 <p class="pl-progress" aria-live="polite"><span data-pl-step>Step 1</span></p>
 <fieldset class="pl-step" data-n="plan"><legend>What are you planning?</legend>{tiles("plan", plans)}</fieldset>
-<fieldset class="pl-step" data-n="details" hidden><legend>Anything in particular? <span class="pl-sub">Pick one and we will put the closest examples first.</span></legend>
+<fieldset class="pl-step" data-n="details" hidden><legend>Anything in particular? <span class="pl-sub">Choose any that apply. We will put the closest examples first.</span></legend>
 <div class="opts pl-details" data-pl-details></div>
-<div class="pl-where"><button type="button" class="pl-back" data-pl-next>Skip this</button></div></fieldset>
+<div class="pl-where"><button type="button" class="btn btn-accent" data-pl-next>Next</button></div></fieldset>
 <fieldset class="pl-step" data-n="where" hidden><legend>Where is the property?</legend>
 <div class="pl-where"><label class="fl fl-search"><span>Town or postcode</span><input id="pl-place" type="text" autocomplete="postal-code" placeholder="e.g. Potters Bar or EN4"></label>
 <button type="button" class="btn btn-accent" data-pl-where>Show projects</button><button type="button" class="pl-back" data-pl-skip>Skip this</button></div>
