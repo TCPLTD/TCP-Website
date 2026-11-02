@@ -529,3 +529,5 @@ form.enquiry .btn { margin-top: 10px; }
 .pl-where { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; }
 .pl-where .fl { flex: 1 1 280px; }
 .pl-hint { margin: 10px 0 0; color: var(--muted); }
+.pl-sub { display: block; font-family: var(--body); font-weight: 400; font-size: 1rem; color: var(--muted); margin-top: 4px; }
+.pl-details { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }

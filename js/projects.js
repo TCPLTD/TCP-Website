@@ -89,6 +89,12 @@
       parseQuery(); var n = all.filter(matches).length; state = keep; parseQuery(); return n;
     },
     // the name of a place in our records that matches what was typed, or null
+    // how many projects a planner choice would show that also mention any of these words
+    countWith: function (o, alts) {
+      var keep = state; state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '' };
+      parseQuery(); var n = all.filter(function (p) { return matches(p) && alts.some(function (x) { return text(p).indexOf(x) !== -1; }); }).length;
+      state = keep; parseQuery(); return n;
+    },
     place: function (text) { var k = (text || '').toLowerCase().replace(/'/g, '').trim(); return PLACES[k] ? PLACES[k].name : null; },
     set: function (o) {
       state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '', boost: o.boost || [] };
@@ -104,17 +110,20 @@
   var PLACES = {};
   (window.TCP_PROJECTS || []).forEach(function (p) {
     if (typeof p.lat !== 'number') return;
-    [p.town, p.district, p.borough, p.street].forEach(function (n) {
+    // when one name is several things (Barnet the town and Barnet the council), the town wins
+    [p.town, p.district, p.street, p.borough].forEach(function (n, rank) {
       if (!n || n === 'Other' || n === 'London') return;
       var k = n.toLowerCase().replace(/'/g, '');
-      var e = PLACES[k] || (PLACES[k] = { name: n, lat: 0, lng: 0, n: 0 });
+      var e = PLACES[k];
+      if (!e || rank < e.rank) e = PLACES[k] = { name: n, lat: 0, lng: 0, n: 0, rank: rank };
+      else if (rank > e.rank) return;
       e.lat += p.lat; e.lng += p.lng; e.n++;
     });
   });
   var parsed = { words: [], place: null };
   // split the search into a place (if one is named) and the words describing the work
   function parseQuery() {
-    var toks = (state.q || '').replace(/'/g, '').split(/\s+/).filter(Boolean), words = [], place = null;
+    var toks = norm(state.q).replace(/'/g, '').split(/\s+/).filter(Boolean), words = [], place = null;
     for (var i = 0; i < toks.length;) {
       var hit = 0;
       for (var n = Math.min(4, toks.length - i); n >= 1; n--) {
@@ -127,8 +136,24 @@
   }
   var WORK_WORDS = ['loft', 'rear', 'side', 'front', 'garage', 'porch', 'extension', 'conversion', 'dormer', 'garden', 'flat', 'flats'];
   function text(p) {
-    if (!p._t) p._t = [p.type].concat((p.approvals || []).map(function (a) { return (a.summary || '') + ' ' + a.route + ' ' + (a.ref || ''); })).join(' ').toLowerCase();
+    if (!p._t) p._t = norm([p.type].concat((p.approvals || []).map(function (a) { return (a.summary || '') + ' ' + a.route + ' ' + (a.ref || ''); })).join(' '));
     return p._t;
+  }
+  function norm(x) { return String(x || '').toLowerCase().replace(/[-\/]/g, ' ').replace(/\bstory\b/g, 'storey').replace(/\bstories\b/g, 'storey'); }
+  // other ways people describe the same work, as council descriptions word it
+  var SYN = {
+    velux: ['velux', 'rooflight', 'roof light', 'skylight'], rooflight: ['rooflight', 'roof light', 'velux', 'skylight'], skylight: ['skylight', 'rooflight', 'roof light', 'velux'],
+    wraparound: ['wrap', 'side and rear'], wrap: ['wrap', 'side and rear'], double: ['two storey', 'double'], kitchen: ['rear extension', 'kitchen'],
+    outhouse: ['outhouse', 'outbuilding'], outbuilding: ['outbuilding', 'outhouse'], studio: ['outhouse', 'outbuilding', 'studio'], office: ['office', 'outhouse', 'outbuilding'],
+    annexe: ['annex', 'outhouse', 'outbuilding'], annex: ['annex', 'outhouse', 'outbuilding'], attic: ['loft', 'attic'], dormer: ['dormer'], balcony: ['balcony', 'juliet'],
+    bungalow: ['bungalow', 'single storey'], driveway: ['driveway', 'crossover', 'parking'], conservatory: ['conservatory', 'rear extension']
+  };
+  // does the text contain this search word, a plural or singular of it, or another way of saying it?
+  function has(t, w) {
+    var alts = SYN[w] || [w];
+    if (w.length > 3 && /s$/.test(w)) alts = alts.concat([w.slice(0, -1)]);
+    for (var i = 0; i < alts.length; i++) if (t.indexOf(alts[i]) !== -1) return true;
+    return false;
   }
   function km(p, c) {
     if (typeof p.lat !== 'number') return 99;
@@ -137,17 +162,19 @@
   }
   function score(p) {
     var t = text(p), s = 0, w = parsed.words, boost = state.boost || [];
-    w.forEach(function (x) { if (t.indexOf(x) !== -1) s += 2; });
+    w.forEach(function (x) { if (has(t, x)) s += 2; });
     if (w.length > 1 && t.indexOf(w.join(' ')) !== -1) s += 4;
-    boost.forEach(function (b) { if (t.indexOf(b) !== -1) s += 3; });
+    // boost entries are a word or a list of ways of saying one thing (the planner's detail choices)
+    boost.forEach(function (b) { if ([].concat(b).some(function (x) { return t.indexOf(x) !== -1; })) s += 6; });
     // a short description that is mostly the thing searched for is a clearer example
     (p.approvals || []).some(function (a) {
       var d = (a.summary || '').toLowerCase();
-      if (d && d.length < 70 && w.every(function (x) { return d.indexOf(x) !== -1; })) { s += 2; return true; }
+      d = norm(d);
+      if (d && d.length < 70 && w.every(function (x) { return has(d, x); })) { s += 2; return true; }
     });
     if (p.described) s += 0.5;
     s += Math.max(0, (p.year || 2000) - 2000) / 25;
-    if (parsed.place) s -= km(p, parsed.place) * 0.35;
+    if (parsed.place) s -= km(p, parsed.place) * 0.3;
     p._s = s;
     return s;
   }
@@ -159,8 +186,8 @@
     if (state.year && String(p.year) !== state.year) return false;
     if (state.route && routes(p).indexOf(state.route) === -1) return false;
     if (parsed.words.length) {
-      var hay = [p.street, p.town, p.district, p.borough, p.year].join(' ').toLowerCase() + ' ' + text(p);
-      for (var i = 0; i < parsed.words.length; i++) if (hay.indexOf(parsed.words[i]) === -1) return false;
+      var hay = norm([p.street, p.town, p.district, p.borough, p.year].join(' ')) + ' ' + text(p);
+      for (var i = 0; i < parsed.words.length; i++) if (!has(hay, parsed.words[i])) return false;
     }
     return true;
   }
