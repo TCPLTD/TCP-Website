@@ -493,7 +493,14 @@ FAQ = [("Getting started", [
   ("Can you recommend a builder?", "Yes. We have worked with reliable builders across North London and Hertfordshire for many years and are happy to suggest some when you reach the build stage."),
   ("Can I see work you have done near me?", "Yes. Our <a href=\"projects.html\">projects page</a> shows hundreds of approved projects on a map and in a list, each linked to the council's record. Search by street, town or type of work."),
   ("Which areas do you cover?", "Mainly North London and Hertfordshire, and further afield by arrangement. See <a href=\"areas.html\">areas we cover</a>.")])]
-HOME_FAQ = ["Do I always need planning permission for an extension?", "How long does planning permission take?", "Do you come to the property?", "How much will it cost?", "Can I see work you have done near me?"]
+# Home page: the questions clients ask most, with short, simple answers (the FAQ page has the detail).
+HOME_FAQ = [
+  ("Do I need planning permission?", "Not always. Many single storey rear extensions, loft conversions and garden rooms can be built without a full application, under what are called permitted development rights. It depends on your house, any earlier extensions and whether you are in a conservation area. We check this for you at the first visit."),
+  ("How do we get started?", f"Call <a href=\"tel:{PHONE_TEL}\">{PHONE}</a> or <a href=\"contact.html\">send us a message</a>. We visit your home, listen to what you want and tell you honestly what is likely to be approved. Then we measure up, draw the plans and submit them."),
+  ("How long does planning permission take?", "Usually around eight weeks from when the council registers the application. We deal with the council throughout and keep you updated until the decision."),
+  ("How much will it cost?", f"Every project is different, so we talk fees through with you in person and then give you a fixed quote. Call <a href=\"tel:{PHONE_TEL}\">{PHONE}</a> for a chat."),
+  ("Do you deal with the council for me?", "Yes. We submit the application on your behalf and deal with the planning officer from start to finish, so you don't have to."),
+  ("Do I need building regulations approval too?", "Almost always, yes, even when you don't need planning permission. Once planning is approved, we prepare the building control drawings your builder needs.")]
 _FAQ_ALL = {q: a for _g, items in FAQ for q, a in items}
 def faq_item(q, a): return f'<details><summary>{q}</summary><p>{a}</p></details>'
 def faq_list(qs): return '<div class="faq">' + "".join(faq_item(q, _FAQ_ALL[q]) for q in qs) + '</div>'
@@ -561,7 +568,7 @@ pages["index.html"] = shell("index.html",
 </div></section>
 <section class="section"><div class="wrap" style="max-width:900px">
 <div class="section-head"><div class="stack"><span class="label">Questions</span><h2>Frequently asked questions</h2></div><a class="more" href="faq.html">All questions</a></div>
-''' + faq_list(HOME_FAQ) + '''
+''' + '<div class="faq">' + "".join(faq_item(q, a) for q, a in HOME_FAQ) + '</div>' + '''
 </div></section>
 <section class="section-sm"><div class="wrap"><div class="cta-box"><div><span class="label">Fees</span><h2>What will my design cost?</h2><p>Answer three quick questions to see what is included for your type of project.</p></div><a class="btn btn-accent" href="fees.html">Estimate my fee</a></div></div></section>
 ''' + CLOSING,
