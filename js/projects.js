@@ -123,7 +123,10 @@
   var parsed = { words: [], place: null };
   // split the search into a place (if one is named) and the words describing the work
   function parseQuery() {
-    var toks = norm(state.q).replace(/'/g, '').split(/\s+/).filter(Boolean), words = [], place = null;
+    // a full postcode is looked up as a whole
+    var q0 = norm(state.q), pcode = null;
+    q0 = q0.replace(/\b([a-z]{1,2}\d[a-z\d]?)\s*(\d[a-z]{2})\b/, function (m, a, b) { pcode = (a + ' ' + b).toUpperCase(); return ' '; });
+    var toks = q0.replace(/'/g, '').replace(/,/g, ' ').split(/\s+/).filter(function (t) { return t && STOP.indexOf(t) === -1; }), words = [], place = null;
     for (var i = 0; i < toks.length;) {
       var hit = 0;
       for (var n = Math.min(4, toks.length - i); n >= 1; n--) {
@@ -132,7 +135,59 @@
       }
       if (hit) i += hit; else { words.push(toks[i]); i++; }
     }
-    parsed = { words: words, place: place };
+    // Words that describe no work in our records (a street we haven't worked on, a full postcode)
+    // are treated as somewhere to measure from, looked up on a map service.
+    // An unknown word counts as part of a street only when a street word (road, avenue...) follows it;
+    // otherwise it stays a work word, and the search falls back to the closest matches.
+    var work = [], where = [];
+    words.forEach(function (w, j) {
+      if (STREET_WORDS.indexOf(w) !== -1 && where.length) { where.push(w); return; }
+      var nextIsStreet = words.slice(j + 1).some(function (x, k) { return STREET_WORDS.indexOf(x) !== -1 && words.slice(j + 1, j + 1 + k).every(function (y) { return !has(vocab(), y); }); });
+      if (!has(vocab(), w) && nextIsStreet) where.push(w); else work.push(w);
+    });
+    if (pcode) { where = [pcode]; place = null; }
+    var lookup = null, note = '';
+    if (where.length) {
+      var phrase = where.join(' ') + (place && !pcode ? ', ' + place.name : '');
+      var g = GEO[phrase];
+      if (g) place = g;
+      else if (g === null) note = 'We could not find \u201c' + where.join(' ') + '\u201d on the map';
+      else { lookup = phrase; note = 'Finding \u201c' + where.join(' ') + '\u201d on the map\u2026'; }
+    }
+    parsed = { words: work, place: place, lookup: lookup, note: note };
+    if (lookup) geocode(lookup);
+  }
+  var STOP = ['in', 'near', 'at', 'on', 'the', 'a', 'an', 'for', 'to', 'of', 'my', 'i', 'want', 'and', 'with', 'around', 'by', 'nearby', 'like', 'similar', 'please'];
+  var STREET_WORDS = ['road', 'rd', 'avenue', 'ave', 'close', 'lane', 'way', 'drive', 'gardens', 'crescent', 'street', 'st', 'grove', 'park', 'hill', 'place', 'court', 'walk', 'rise', 'mews', 'green', 'row', 'terrace', 'view', 'end', 'gate', 'square'];
+  var VOCAB = null;
+  function vocab() { return VOCAB || (VOCAB = all.map(text).join(' ')); }
+  // Map lookups for places we have no projects in: postcodes via postcodes.io, streets via OpenStreetMap.
+  var GEO = {}, geoTimer = null, geoBusy = {};
+  function geocode(phrase) {
+    if (geoBusy[phrase]) return;
+    clearTimeout(geoTimer);
+    geoTimer = setTimeout(function () {
+      geoBusy[phrase] = true;
+      var pc = phrase.replace(/,.*$/, '').replace(/\s+/g, '').toUpperCase();
+      var url, pick;
+      if (/^[A-Z]{1,2}\d[A-Z\d]?\d[A-Z]{2}$/.test(pc)) {
+        url = 'https://api.postcodes.io/postcodes/' + pc;
+        pick = function (j) { return j && j.result ? { lat: j.result.latitude, lng: j.result.longitude } : null; };
+      } else if (/^[A-Z]{1,2}\d[A-Z\d]?$/.test(pc)) {
+        url = 'https://api.postcodes.io/outcodes/' + pc;
+        pick = function (j) { return j && j.result ? { lat: j.result.latitude, lng: j.result.longitude } : null; };
+      } else {
+        url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=gb&viewbox=-0.75,52.05,0.35,51.35&q=' + encodeURIComponent(phrase);
+        pick = function (j) { return j && j[0] ? { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) } : null; };
+      }
+      fetch(url).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (j) {
+        var c = pick(j);
+        var name = phrase.replace(/,.*$/, '');
+        if (!/^[A-Z]{1,2}\d/.test(name)) name = name.replace(/\b\w/g, function (m) { return m.toUpperCase(); });
+        GEO[phrase] = c ? { name: name, lat: c.lat, lng: c.lng, n: 1, exact: true } : null;
+        render();
+      });
+    }, 600);
   }
   var WORK_WORDS = ['loft', 'rear', 'side', 'front', 'garage', 'porch', 'extension', 'conversion', 'dormer', 'garden', 'flat', 'flats'];
   function text(p) {
@@ -240,7 +295,9 @@
     } else {
       // a house with several approvals: each job gets its own date, description and council link
       var ul = el('ul', 'approval-list');
-      p.approvals.slice().reverse().forEach(function (a) {
+      // jobs that match the search come first, then newest first
+      var hit = function (a) { var d = norm((a.summary || '') + ' ' + a.route); return parsed.words.length && parsed.words.every(function (w) { return has(d, w); }) ? 0 : 1; };
+      p.approvals.slice().reverse().sort(function (a, b) { return hit(a) - hit(b); }).forEach(function (a) {
         var li = el('li');
         var top = el('div', 'approval-top');
         top.appendChild(el('span', 'approval-year', a.year || ''));
@@ -267,7 +324,14 @@
     var filtering = !!(state.type || state.q || state.area || state.year || state.route);
     if (clear) clear.hidden = !filtering;
     parseQuery();
-    var found = all.filter(matches);
+    var found = all.filter(matches), relaxed = false;
+    if (!found.length && parsed.words.length > 1) {
+      // nothing has every word: show the projects with the most of them instead
+      var keep = parsed.words;
+      parsed.words = [];
+      found = all.filter(matches).filter(function (p) { return keep.some(function (w) { return has(text(p), w); }); });
+      parsed.words = keep; relaxed = true;
+    }
     if (ranked()) {
       found.forEach(score);
       found.sort(function (a, b) { return b._s - a._s; });
@@ -283,6 +347,8 @@
     var cap = limit || shownCount;
     var shown = found.slice(0, cap);
     var order = parsed.place ? ', closest to ' + parsed.place.name + ' first' : ranked() ? ', best matches first' : '';
+    if (relaxed) order += '. Nothing matched every word, so these are the closest';
+    if (parsed.note) order += '. ' + parsed.note;
     if (count) count.textContent = (filtering && found.length < all.length ? found.length + ' of ' + all.length + ' approved projects match' : all.length + ' approved projects') + order;
     if (more) more.hidden = !!limit || found.length <= cap;
     list.innerHTML = '';
@@ -295,7 +361,7 @@
       var c = card(p), tags = c.querySelector('.tags');
       if (parsed.place) {
         var miles = km(p, parsed.place) / 1.609;
-        tags.insertBefore(el('span', 'tag tag-near', miles < 0.3 ? 'In ' + parsed.place.name : miles.toFixed(1) + ' miles from ' + parsed.place.name), tags.firstChild);
+        tags.insertBefore(el('span', 'tag tag-near', miles < 0.3 ? (parsed.place.exact ? 'Very close to ' : 'In ') + parsed.place.name : miles.toFixed(1) + ' miles from ' + parsed.place.name), tags.firstChild);
       } else if (best !== null && i < 3 && p._s >= best) {
         tags.insertBefore(el('span', 'tag tag-best', 'Best match'), tags.firstChild);
       }
