@@ -95,6 +95,11 @@
       parseQuery(); var n = all.filter(function (p) { return matches(p) && alts.some(function (x) { return text(p).indexOf(x) !== -1; }); }).length;
       state = keep; parseQuery(); return n;
     },
+    // every place in our records, for the suggestions under the search boxes
+    places: function () {
+      var KIND = ['Town', 'Postcode area', 'Street', 'Council'];
+      return Object.keys(PLACES).map(function (k) { var e = PLACES[k]; return { label: e.name, kind: KIND[e.rank], n: e.n }; });
+    },
     place: function (text) { var k = (text || '').toLowerCase().replace(/'/g, '').trim(); return PLACES[k] ? PLACES[k].name : null; },
     set: function (o) {
       state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '', boost: o.boost || [] };
@@ -157,7 +162,7 @@
     parsed = { words: work, place: place, lookup: lookup, note: note };
     if (lookup) geocode(lookup);
   }
-  var STOP = ['in', 'near', 'at', 'on', 'the', 'a', 'an', 'for', 'to', 'of', 'my', 'i', 'want', 'and', 'with', 'around', 'by', 'nearby', 'like', 'similar', 'please'];
+  var STOP = ['in', 'near', 'at', 'on', 'the', 'a', 'an', 'for', 'of', 'my', 'i', 'want', 'and', 'with', 'around', 'by', 'nearby', 'like', 'similar', 'please'];
   var STREET_WORDS = ['road', 'rd', 'avenue', 'ave', 'close', 'lane', 'way', 'drive', 'gardens', 'crescent', 'street', 'st', 'grove', 'park', 'hill', 'place', 'court', 'walk', 'rise', 'mews', 'green', 'row', 'terrace', 'view', 'end', 'gate', 'square'];
   var VOCAB = null;
   function vocab() { return VOCAB || (VOCAB = all.map(text).join(' ')); }
@@ -216,20 +221,24 @@
     return Math.sqrt(dx * dx + dy * dy);
   }
   function score(p) {
-    var t = text(p), s = 0, w = parsed.words, boost = state.boost || [];
-    w.forEach(function (x) { if (has(t, x)) s += 2; });
-    if (w.length > 1 && t.indexOf(w.join(' ')) !== -1) s += 4;
-    // boost entries are a word or a list of ways of saying one thing (the planner's detail choices)
-    boost.forEach(function (b) { if ([].concat(b).some(function (x) { return t.indexOf(x) !== -1; })) s += 6; });
+    var t = text(p), s = 0, w = parsed.words, boost = state.boost || [], why = { words: [], details: [], clear: false };
+    w.forEach(function (x) { if (has(t, x)) { s += 2; why.words.push(x); } });
+    if (w.length > 1 && t.indexOf(w.join(' ')) !== -1) { s += 4; why.phrase = w.join(' '); }
+    // boost entries are the planner's detail choices: { label, words } (or a plain list of words)
+    boost.forEach(function (b) {
+      var alts = b.words || [].concat(b);
+      if (alts.some(function (x) { return t.indexOf(x) !== -1; })) { s += 6; why.details.push((b.label || alts[0]).toLowerCase()); }
+    });
     // a short description that is mostly the thing searched for is a clearer example
     (p.approvals || []).some(function (a) {
       var d = (a.summary || '').toLowerCase();
       d = norm(d);
-      if (d && d.length < 70 && w.every(function (x) { return has(d, x); })) { s += 2; return true; }
+      if (d && d.length < 70 && w.length && w.every(function (x) { return has(d, x); })) { s += 2; why.clear = true; return true; }
     });
+    p._why = why;
     if (p.described) s += 0.5;
     s += Math.max(0, (p.year || 2000) - 2000) / 25;
-    if (parsed.place) s -= km(p, parsed.place) * 0.3;
+    if (parsed.place) s -= km(p, parsed.place) * 0.6;
     p._s = s;
     return s;
   }
@@ -356,14 +365,49 @@
       list.appendChild(el('p', 'empty', !all.length && fixedBorough ? 'Projects in ' + fixedBorough + ' are being added. Call 07843 561129 to hear about our work nearby.' : 'No projects match those filters. Try a nearby town or another type of work.'));
       return;
     }
-    var best = ranked() && !parsed.place && found.length > 3 ? found[0]._s - 1.5 : null;
+    // the nearest project that has everything asked for, to explain a far-away best match
+    var nearestFull = null;
+    if (parsed.place) found.forEach(function (p) {
+      var wy = p._why || {};
+      var full = wy.words && wy.words.length === parsed.words.length && wy.details.length === (state.boost || []).length;
+      if (full && (!nearestFull || km(p, parsed.place) < km(nearestFull, parsed.place))) nearestFull = p;
+    });
+    function milesText(p) {
+      var m = km(p, parsed.place) / 1.609;
+      return m < 0.3 ? (parsed.place.exact ? 'very close to ' : 'in ') + parsed.place.name : m.toFixed(1) + ' miles from ' + parsed.place.name;
+    }
+    // one line saying why a top result was picked
+    function reason(p) {
+      var wy = p._why || { words: [], details: [] }, bits = [];
+      var said = wy.words.filter(function (x) { return x !== 'to'; });
+      if (wy.phrase) bits.push('includes \u201c' + wy.phrase + '\u201d');
+      else if (said.length) bits.push('includes ' + said.map(function (x) { return '\u201c' + x + '\u201d'; }).join(' and '));
+      if (wy.details.length) bits.push(wy.details.join(', '));
+      if (parsed.place) {
+        var m = km(p, parsed.place) / 1.609;
+        if (m < 1) bits.push('very close: ' + milesText(p));
+        else if (m < 3) bits.push('close by: ' + milesText(p));
+        else if (p === nearestFull) bits.push('nothing closer has all of this: ' + milesText(p));
+        else bits.push(milesText(p));
+      }
+      if (wy.clear) bits.push('a clear example of this work');
+      if (!bits.length) bits.push('recent and fully described');
+      var out = bits.join(' · ');
+      return out.charAt(0).toUpperCase() + out.slice(1);
+    }
+    var showBest = ranked() && found.length > 1;
     shown.forEach(function (p, i) {
       var c = card(p), tags = c.querySelector('.tags');
-      if (parsed.place) {
-        var miles = km(p, parsed.place) / 1.609;
-        tags.insertBefore(el('span', 'tag tag-near', miles < 0.3 ? (parsed.place.exact ? 'Very close to ' : 'In ') + parsed.place.name : miles.toFixed(1) + ' miles from ' + parsed.place.name), tags.firstChild);
-      } else if (best !== null && i < 3 && p._s >= best) {
-        tags.insertBefore(el('span', 'tag tag-best', 'Best match'), tags.firstChild);
+      if (showBest && i < 3) {
+        c.classList.add('is-best');
+        var why = el('p', 'card-why');
+        why.appendChild(el('strong', '', 'Why: '));
+        why.appendChild(document.createTextNode(reason(p)));
+        var head = c.querySelector('.card-body');
+        head.insertBefore(why, head.firstChild);
+        head.insertBefore(el('span', 'best-badge', 'Best match ' + (i + 1)), head.firstChild);
+      } else if (parsed.place) {
+        tags.insertBefore(el('span', 'tag tag-near', milesText(p).replace(/^./, function (x) { return x.toUpperCase(); })), tags.firstChild);
       }
       list.appendChild(c);
     });

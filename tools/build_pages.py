@@ -599,7 +599,7 @@ pages["projects.html"] = shell("projects.html", "Projects and map | Town & Count
 <div class="section-head"><div class="stack"><span class="label">Featured projects</span><h2>A closer look</h2><p class="muted">Photos, the planning decision and the story behind some of our projects.</p></div></div>
 {featured_carousel()}
 </div></section>''' + CLOSING, extra_head=LEAFLET,
- scripts=("data/projects.js", "data/featured.js", "js/projects.js", "js/planner.js") + MAPJS + ("js/carousel.js",))
+ scripts=("data/projects.js", "data/featured.js", "js/projects.js", "js/planner.js", "js/suggest.js") + MAPJS + ("js/carousel.js",))
 
 # ---------------- Services ----------------
 SV = [("extensions", "Extensions", "An extension is the most common way to gain space without moving. We design single and two storey rear extensions, side returns, wraparounds and over-garage extensions that suit the house and stand a strong chance of approval. Many single storey extensions can be built under permitted development; we check that first, because it can save you time and fees.",

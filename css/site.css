@@ -531,3 +531,14 @@ form.enquiry .btn { margin-top: 10px; }
 .pl-hint { margin: 10px 0 0; color: var(--muted); }
 .pl-sub { display: block; font-family: var(--body); font-weight: 400; font-size: 1rem; color: var(--muted); margin-top: 4px; }
 .pl-details { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+
+/* ---------- Search suggestions ---------- */
+.sg-wrap { position: relative; }
+.sg-list { position: absolute; left: 0; right: 0; top: 100%; z-index: 1000; margin: 4px 0 0; padding: 6px; list-style: none; background: var(--bg); border: 1px solid var(--field); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(15, 42, 60, 0.18); max-height: 360px; overflow-y: auto; }
+.sg-item { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 12px; border-radius: 6px; cursor: pointer; }
+.sg-item:hover, .sg-item[aria-selected="true"] { background: var(--band); }
+.sg-label { font-weight: 600; color: var(--ink); }
+.sg-kind { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+.card.is-best { border: 2px solid var(--accent); }
+.best-badge { align-self: flex-start; font-weight: 700; font-size: 0.85rem; padding: 4px 12px; border-radius: 999px; background: var(--accent); color: var(--on-accent); }
+.card-why { margin: 2px 0 6px; font-size: 0.93rem; color: var(--ink); background: var(--band); padding: 8px 10px; border-radius: 6px; }

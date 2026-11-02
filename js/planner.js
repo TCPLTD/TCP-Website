@@ -108,7 +108,7 @@
     next();
   }
   box.querySelector('[data-pl-where]').addEventListener('click', usePlace);
-  placeInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); usePlace(); } });
+  placeInput.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !placeInput.getAttribute('aria-activedescendant')) { e.preventDefault(); usePlace(); } });
   box.querySelector('[data-pl-skip]').addEventListener('click', function () { place = null; hint.textContent = ''; next(); });
   back.addEventListener('click', function () {
     var s = order(), i = now === 'result' ? s.length : s.indexOf(now);
@@ -120,7 +120,7 @@
     window.TCPProjects.set({}); go('plan', true);
   });
   box.querySelector('[data-pl-show]').addEventListener('click', function () {
-    window.TCPProjects.set({ type: plan.type, q: query(), boost: picked.map(function (d) { return d[1]; }) });
+    window.TCPProjects.set({ type: plan.type, q: query(), boost: picked.map(function (d) { return { label: d[0], words: d[1] }; }) });
     var list = document.querySelector('.pm-head') || document.getElementById('project-list');
     list.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
