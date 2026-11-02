@@ -1,6 +1,7 @@
 """Builds every HTML page of the site. Run from the repo root:  python3 tools/build_pages.py .
 Shared layout (sidebar menu, footer) and all page text live here."""
 import os, sys, json, html as H
+from urllib.parse import quote_plus
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "."
 SITE = "https://townandcountryplanningltd.co.uk/"
@@ -8,7 +9,7 @@ PHONE, PHONE_TEL, EMAIL = "07843 561129", "07843561129", "martin@tcpltd.net"
 GOOGLE_REVIEWS = "https://www.google.com/search?q=Town+%26+Country+Planning+Ltd+Cockfosters"  # replace with the Google review link when available
 
 NAV = [("index.html", "Home"), ("projects.html", "Projects"), ("map.html", "Project map"), ("services.html", "Services"),
-       ("areas.html", "Areas we cover"), ("process.html", "How we work"), ("fees.html", "Fees"), ("reviews.html", "Reviews"),
+       ("areas.html", "Areas we cover"), ("process.html", "How we work"), ("faq.html", "FAQ"), ("fees.html", "Fees"), ("reviews.html", "Reviews"),
        ("about.html", "About us"), ("contact.html", "Contact")]
 
 # ---------------- Areas ----------------
@@ -152,7 +153,7 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 <footer class="site-footer">
 <div class="wrap">
 <div><h3>Town &amp; Country Planning Ltd</h3><ul><li>Planning and design consultants</li><li>Cockfosters, Barnet EN4</li><li>[Company number]</li></ul></div>
-<div><h3>Explore</h3><ul><li><a href="projects.html">Projects</a></li><li><a href="map.html">Project map</a></li><li><a href="services.html">Services</a></li><li><a href="fees.html">Fees</a></li><li><a href="reviews.html">Reviews</a></li></ul></div>
+<div><h3>Explore</h3><ul><li><a href="projects.html">Projects</a></li><li><a href="map.html">Project map</a></li><li><a href="services.html">Services</a></li><li><a href="fees.html">Fees</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
 <div><h3>Areas</h3><ul>{footer_areas}<li><a href="areas.html">All areas</a></li></ul></div>
 <div><h3>Contact</h3><ul><li><a href="tel:{PHONE_TEL}">{PHONE}</a></li><li><a href="mailto:{EMAIL}">{EMAIL}</a></li><li>© <span id="year">2026</span> Town &amp; Country Planning Ltd</li></ul></div>
 </div>
@@ -271,6 +272,232 @@ def hero(h1, sub, actions, label="Planning and design consultants · since 2005"
 def page_head(label, h1, lede, cls="band"):
     return f'<section class="{cls} page-head"><div class="wrap stack"><span class="label">{label}</span><h1>{h1}</h1><p class="lede">{lede}</p></div></section>'
 
+# ---------------- Reviews carousel ----------------
+# Google reviews shown on the site. Paste each one here as (text, name, place or ""), newest first.
+# They appear in the carousel with a Google badge. (Pulling them live from Google needs a
+# Google Places API key; until then, copy them in here.)
+GOOGLE_REVIEW_LIST = []
+
+def review_slides():
+    items = [(t, n, p, "Google review") for t, n, p in GOOGLE_REVIEW_LIST] + [(t, n, p, "Client testimonial") for t, n, p in Q]
+    total = len(items)
+    out = []
+    for i, (t, n, place, src) in enumerate(items):
+        t = t.replace("&hellip;", "\x00"); t = esc(t).replace("\x00", "&hellip;")
+        who = esc(n) + (f", {esc(place)}" if place else "")
+        g = ' rv-google' if src == "Google review" else ''
+        out.append(f'<figure class="rv-slide{g}{" is-on" if i == 0 else ""}" role="group" aria-roledescription="slide" aria-label="{i+1} of {total}">'
+                   f'<div class="rv-top"><span class="stars" aria-label="Five stars">★★★★★</span><span class="rv-src">{src}</span></div>'
+                   f'<blockquote>&ldquo;{t}&rdquo;</blockquote><figcaption>{who}</figcaption></figure>')
+    return "".join(out), total
+
+def reviews_carousel():
+    slides, total = review_slides()
+    dots = "".join(f'<button type="button" class="dot" data-go="{i}" aria-label="Show review {i+1}"{" aria-current=\"true\"" if i == 0 else ""}></button>' for i in range(total))
+    return f'''<div class="rv-layout">
+<div class="rv-google-box">
+<span class="g-mark" aria-hidden="true">G</span>
+<h3>Reviews on Google</h3>
+<p class="muted">Read what clients say about us on Google, or leave a review of your own. Google reviews are added to this page too.</p>
+<div class="actions"><a class="btn btn-navy" href="{GOOGLE_REVIEWS}" target="_blank" rel="noopener">Read our Google reviews</a><a class="btn btn-line" href="{GOOGLE_REVIEWS}" target="_blank" rel="noopener">Leave a review</a></div>
+</div>
+<section class="rv" data-carousel="fade" data-interval="8000" aria-roledescription="carousel" aria-label="Client reviews">
+<div class="rv-slides" aria-live="off">{slides}</div>
+<div class="car-controls">
+<button type="button" class="car-btn" data-prev aria-label="Previous review"><span aria-hidden="true">&#8592;</span></button>
+<button type="button" class="car-btn car-pause" data-pause aria-label="Pause reviews"><span aria-hidden="true" class="ico-pause"></span></button>
+<button type="button" class="car-btn" data-next aria-label="Next review"><span aria-hidden="true">&#8594;</span></button>
+<span class="car-count" data-count>1 / {total}</span>
+<div class="dots">{dots}</div>
+</div>
+</section>
+</div>'''
+
+# ---------------- Featured projects ----------------
+def _featured():
+    txt = open(os.path.join(OUT, "data", "featured.js"), encoding="utf-8").read()
+    return json.loads(txt[txt.index("= [") + 2:txt.rindex("]") + 1])
+BY_ID = {p["id"]: p for p in PROJECTS}
+FEATURED = []
+for _f in _featured():
+    _p = BY_ID.get(_f["id"]) or next((p for p in PROJECTS if p.get("street") == _f.get("street") and p["town"] == _f.get("town")), None)
+    if _p: FEATURED.append((_f, _p))
+
+def feat_url(p): return f'project-{p["id"]}.html'
+def feat_place(p): return f'{p["street"]}, {p["town"]}' if p.get("street") else p["town"]
+def feat_years(p):
+    ys = sorted({a["year"] for a in p.get("approvals", []) if a.get("year")})
+    return (str(ys[0]) if len(ys) == 1 else f"{ys[0]}–{ys[-1]}") if ys else str(p.get("year", ""))
+def feat_photo(f, cap="Photo to come"):
+    if f.get("photos"): return f'<img src="{esc(f["photos"][0])}" alt="{esc(f["title"])}" loading="lazy">'
+    return f'<div class="ph"><span>{cap}</span></div>'
+
+def featured_card(f, p, i, total):
+    return (f'<article class="fp-card" role="group" aria-roledescription="slide" aria-label="{i+1} of {total}: {esc(f["title"])}">'
+            f'<a class="fp-photo" href="{feat_url(p)}" tabindex="-1" aria-hidden="true">{feat_photo(f)}</a>'
+            f'<div class="fp-body"><span class="card-type">{esc(p["type"])} · Approved {feat_years(p)}</span>'
+            f'<h3><a href="{feat_url(p)}">{esc(f["title"])}</a></h3><p>{esc(f["project"])}</p>'
+            f'<a class="more" href="{feat_url(p)}" aria-label="View project: {esc(f["title"])}">View project</a></div></article>')
+
+def featured_carousel():
+    total = len(FEATURED)
+    cards = "".join(featured_card(f, p, i, total) for i, (f, p) in enumerate(FEATURED))
+    return f'''<section class="fp" data-carousel="track" data-interval="5000" aria-roledescription="carousel" aria-label="Featured projects">
+<div class="fp-track" tabindex="0" aria-label="Featured projects, scroll sideways">{cards}</div>
+<div class="car-controls">
+<button type="button" class="car-btn" data-prev aria-label="Previous project"><span aria-hidden="true">&#8592;</span></button>
+<button type="button" class="car-btn car-pause" data-pause aria-label="Pause featured projects"><span aria-hidden="true" class="ico-pause"></span></button>
+<button type="button" class="car-btn" data-next aria-label="Next project"><span aria-hidden="true">&#8594;</span></button>
+<span class="car-count" data-count>1 / {total}</span>
+</div>
+</section>'''
+
+def featured_page(i):
+    f, p = FEATURED[i]
+    nf, np_ = FEATURED[(i + 1) % len(FEATURED)]
+    pf, pp = FEATURED[i - 1]
+    photos = f.get("photos") or []
+    if photos:
+        gal = "".join(f'<img src="{esc(x)}" alt="{esc(f["title"])}, photo {k+1}"{" loading=\"lazy\"" if k else ""}>' for k, x in enumerate(photos))
+    else:
+        gal = '<div class="ph"><span>Photos to come</span></div><div class="ph"><span>Photo to come</span></div><div class="ph"><span>Photo to come</span></div>'
+    feats = "".join(f"<li>{esc(x)}</li>" for x in f.get("features", []))
+    desc = (f'<p>{esc(f["description"])}</p>' if f.get("description") else
+            f'<p>We designed the scheme and prepared the drawings and planning application for this {esc(p["type"].lower())} on {esc(feat_place(p))}. {esc(p["borough"] if p["borough"] != "Other" else "The council")} approved it in {feat_years(p)}.</p>'
+            '<p class="muted"><em>A fuller write-up of the brief, the design and how the application went is to come.</em></p>')
+    apps = "".join(
+        f'<li><strong>Approved {a.get("year") or ""}</strong><span>{esc(a.get("summary") or a.get("route", ""))}</span>'
+        f'<em>{esc(a.get("route", ""))}{" · Ref " + esc(a["ref"]) if a.get("ref") else ""}</em>'
+        + (f' <a href="{esc(a["link"])}" target="_blank" rel="noopener">View the council decision<span class="sr-only"> (opens in a new tab)</span></a>' if a.get("link") else "")
+        + '</li>' for a in reversed(p.get("approvals", [])))
+    council = p["borough"] if p["borough"] != "Other" else "Local council"
+    tour = f'<a class="btn btn-line" href="{esc(p["tour"])}" target="_blank" rel="noopener">3D tour</a>' if p.get("tour") else ""
+    body = (page_head(f"Featured project · {esc(p['type'])}", esc(f["title"]), esc(f["project"]))
+     + f'''<section class="section"><div class="wrap case">
+<div class="case-gallery">{gal}</div>
+<div class="case-body">
+<div class="prose">
+<h2>The project</h2>{desc}
+<h3>Key features</h3><ul class="case-feats">{feats}</ul>
+<h3>Planning decision</h3><ul class="case-apps">{apps}</ul>
+</div>
+<aside class="case-facts"><dl>
+<dt>Location</dt><dd>{esc(feat_place(p))}</dd>
+<dt>Council</dt><dd>{esc(council)}</dd>
+<dt>Planning decision</dt><dd>Approved {feat_years(p)}</dd>
+<dt>Type of work</dt><dd>{esc(p["type"])}</dd>
+</dl><a class="btn btn-navy" href="map.html#{p["id"]}">See it on the map</a>{tour}<a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Talk to us about yours</a></aside>
+</div>
+<nav class="case-next" aria-label="More featured projects"><a href="{feat_url(pp)}"><span class="label">Previous project</span><strong>{esc(pf["title"])}</strong></a><a href="{feat_url(np_)}" class="nx"><span class="label">Next project</span><strong>{esc(nf["title"])}</strong></a></nav>
+</div></section>''' + CLOSING)
+    return shell(feat_url(p), f'{f["title"]} | Town & Country Planning Ltd',
+                 f'{f["project"]}. Approved {feat_years(p)}. Design, drawings and planning application by Town & Country Planning Ltd.', body)
+
+# ---------------- "What are you planning?" ----------------
+_H = '<path d="M8 72H112"/>'
+ICONS = {
+ "detached": _H + '<path d="M38 72V38H82V72M34 40L60 18L86 40"/><path d="M54 72V58H66V72M44 46H52V54H44ZM68 46H76V54H68Z"/>',
+ "semi": _H + '<path d="M18 72V38H102V72M60 38V72M14 40L36 18H84L106 40"/><path class="new-fill" d="M18 38H60V72H18Z"/><path d="M30 72V60H40V72M80 72V60H90V72"/>',
+ "terraced": _H + '<path d="M8 72V38H112V72M45 38V72M78 38V72M6 40L18 22H102L114 40"/><path class="new-fill" d="M45 38H78V72H45Z"/><path d="M22 72V60H31V72M56 72V60H65V72M89 72V60H98V72"/>',
+ "bungalow": _H + '<path d="M22 72V48H98V72M14 50L60 26L106 50"/><path d="M54 72V60H66V72M32 56H44V64H32ZM76 56H88V64H76Z"/>',
+ "flat": _H + '<path d="M34 72V10H86V72"/><path d="M42 18H52V26H42ZM68 18H78V26H68ZM42 34H52V42H42ZM68 34H78V42H68ZM42 50H52V58H42ZM68 50H78V58H68Z"/><path d="M55 72V62H65V72"/>',
+ "commercial": _H + '<path d="M20 72V24H100V72M20 34H100"/><path d="M28 44H74V64H28ZM82 72V44H94V72"/>',
+ "f1": _H + '<path d="M34 72V50H86V72M30 52L60 36L90 52"/>',
+ "f2": _H + '<path d="M34 72V32H86V72M34 52H86M30 34L60 16L90 34"/>',
+ "f3": _H + '<path d="M34 72V22H86V72M34 39H86M34 56H86M30 24L60 6L90 24"/>',
+ "rear": _H + '<path d="M18 72V32H62V72M14 34L40 12L66 34"/><path class="new" d="M62 72V48H100V72M62 48L100 44"/><path class="new" d="M74 72V58H90V72"/>',
+ "side": _H + '<path d="M18 72V34H66V72M14 36L42 14L70 36"/><path class="new" d="M66 72V46H98V72M66 46L98 50"/>',
+ "twostorey": _H + '<path d="M18 72V34H62V72M14 36L40 14L66 36"/><path class="new" d="M62 72V34H96V72M62 53H96M62 34L96 34"/>',
+ "loft": _H + '<path d="M26 72V42H94V72M20 44L60 12L100 44"/><path class="new" d="M62 22V40H88V27"/><path class="new" d="M68 28H80V36H68Z"/>',
+ "garage": _H + '<path d="M14 72V34H60V72M10 36L37 14L64 36M60 72V46H104V72"/><path class="new" d="M70 52H94V64H70Z"/>',
+ "garden": '<path d="M8 72H112"/><path d="M24 72V54M24 54a10 10 0 1 1 0.1 0"/><path class="new" d="M52 72V42H104V72M48 42H108M66 42V72M80 42V72"/>',
+ "newhome": _H + '<path class="new" d="M36 72V38H84V72M32 40L60 16L88 40M54 72V58H66V72"/>',
+ "flats": _H + '<path d="M30 72V14H90V72"/><path class="new" d="M30 33H90M30 52H90M60 14V72"/><path d="M40 22H50V28H40ZM70 22H80V28H70ZM40 41H50V47H40ZM70 41H80V47H70Z"/>',
+ "porch": _H + '<path d="M22 72V34H98V72M18 36L60 12L102 36M30 44H42V54H30ZM78 44H90V54H78Z"/><path class="new" d="M48 72V58H72V72M44 58L60 50L76 58"/>',
+ "layout": '<path d="M14 10H106V72H14Z"/><path d="M14 40H50V72M50 52V10"/><path class="new" d="M50 40H106M78 40V72"/>',
+ "unsure": _H + '<path d="M36 72V38H84V72M32 40L60 16L88 40"/><path class="new" d="M54 50a6 6 0 1 1 8 6v4M58 66v1"/>',
+}
+def icon(k): return f'<svg viewBox="0 0 120 80" aria-hidden="true" focusable="false">{ICONS[k]}</svg>'
+
+PROPERTY = [("detached", "Detached house"), ("semi", "Semi-detached house"), ("terraced", "Terraced house"),
+            ("bungalow", "Bungalow"), ("flat", "Flat or maisonette"), ("commercial", "Commercial building")]
+FLOORS = [("f1", "One floor"), ("f2", "Two floors"), ("f3", "Three or more")]
+# plan key, label, icon, projects filter (type of work, search words), not offered for these property types
+PLANS = [("rear", "Rear extension", "rear", "", "rear extension", "flat"),
+         ("side", "Side or wraparound extension", "side", "", "side extension", "flat terraced"),
+         ("twostorey", "Two storey extension", "twostorey", "", "two storey", "flat bungalow"),
+         ("loft", "Loft conversion", "loft", "", "loft", "flat commercial"),
+         ("garage", "Garage conversion", "garage", "", "garage conversion", "flat commercial"),
+         ("garden", "Garden room or outbuilding", "garden", "Outbuildings and garages", "", "commercial"),
+         ("porch", "Porch or front changes", "porch", "", "porch", "flat commercial"),
+         ("layout", "New layout inside", "layout", "", "internal", ""),
+         ("newhome", "New home or replacement house", "newhome", "New homes", "", "flat"),
+         ("flats", "Flats or change of use", "flats", "Flats and change of use", "", ""),
+         ("unsure", "Not sure yet", "unsure", "", "", "")]
+
+def tiles(step, items):
+    return '<div class="pl-tiles">' + "".join(
+        f'<button type="button" class="pl-tile" data-step="{step}" data-v="{k}" data-label="{esc(lbl)}"{" data-not=\"" + rest[0] + "\"" if rest else ""}>{icon(rest[1] if len(rest) > 1 else k)}<span>{esc(lbl)}</span></button>'
+        for k, lbl, *rest in items) + '</div>'
+
+def planner():
+    plans = [(k, lbl, nots, ic) for k, lbl, ic, _t, _q, nots in PLANS]
+    plan_json = json.dumps({k: {"label": lbl, "type": t, "q": q} for k, lbl, _i, t, q, _n in PLANS})
+    return f'''<section class="planner" id="planner" aria-labelledby="pl-h" hidden>
+<div class="pl-head"><span class="label">What are you planning?</span><h2 id="pl-h">Find work like yours</h2><p class="muted">Three quick questions and we show you approved projects like yours. There is no cost calculator here: every house is different, so we talk that through with you in person.</p></div>
+<p class="pl-progress" aria-live="polite"><span data-pl-step>Step 1 of 3</span></p>
+<fieldset class="pl-step" data-n="1"><legend>What type of property is it?</legend>{tiles("property", PROPERTY)}</fieldset>
+<fieldset class="pl-step" data-n="2" hidden><legend>How many floors does it have now?</legend>{tiles("floors", FLOORS)}</fieldset>
+<fieldset class="pl-step" data-n="3" hidden><legend>What are you planning?</legend>{tiles("plan", plans)}</fieldset>
+<div class="pl-result" data-n="4" hidden tabindex="-1">
+<h3 data-pl-summary></h3>
+<p data-pl-count class="lede"></p>
+<div class="actions"><button type="button" class="btn btn-accent" data-pl-show>Show me these projects</button><a class="btn btn-navy" data-pl-enquire href="contact.html">Talk it through with us</a><a class="btn btn-line" href="tel:{PHONE_TEL}">Call {PHONE}</a></div>
+</div>
+<div class="pl-nav"><button type="button" class="pl-back" data-pl-back hidden>Back</button><button type="button" class="pl-back" data-pl-restart hidden>Start again</button></div>
+<script type="application/json" id="pl-plans">{plan_json}</script>
+</section>'''
+
+def planner_teaser():
+    return ('<div class="pl-tiles pl-teaser">' + "".join(
+        f'<a class="pl-tile" href="projects.html?property={k}#planner">{icon(k)}<span>{esc(lbl)}</span></a>' for k, lbl in PROPERTY) + '</div>')
+
+# ---------------- FAQ ----------------
+# (question, answer). Answers may contain links. HOME_FAQ picks the ones shown on the home page.
+FAQ = [("Getting started", [
+  ("Where do I start?", f"With a phone call or an email. Tell us a little about the property and what you have in mind, and we will arrange to visit. Call <a href=\"tel:{PHONE_TEL}\">{PHONE}</a> or <a href=\"contact.html\">send an enquiry</a>."),
+  ("Do you come to the property?", "Yes. The first meeting is at your home, so we can see the house, the garden and the neighbours' properties, listen to what you want and tell you honestly what is likely to be possible."),
+  ("What do I need to have ready?", "Nothing formal. It helps to know roughly what you want, what matters most to you and what you would like to spend on the build. Photos of homes or rooms you like are useful too. If you have old plans, deeds or earlier planning decisions for the house, bring those out, but we can find most of what we need ourselves."),
+  ("Who will I be working with?", "Martin and our small team. You deal with the same people from the first visit to the final drawing, and you always know who to call."),
+  ("How long does the design take?", "It depends on the size of the project and how many options you want to explore. We give you a realistic timetable at the start, once we have seen the property and understood the brief.")]),
+ ("Planning permission", [
+  ("Do I always need planning permission for an extension?", "Not always. Many extensions can be built under permitted development rights. As a guide, a single storey rear extension can go out 3 metres on a terraced or semi-detached house and 4 metres on a detached house, or up to 6 and 8 metres through the council's prior approval process. These rights are restricted in conservation areas, on listed buildings and where earlier extensions have used them up. We check your position at the start."),
+  ("What is a lawful development certificate?", "A certificate from the council confirming that work is permitted development and does not need planning permission. It is not compulsory, but it gives you certainty before you build and is useful when you come to sell. We prepare and submit these regularly."),
+  ("How long does planning permission take?", "Councils aim to decide householder applications within eight weeks of validating them, and major applications within 13 weeks. Some councils take longer in busy periods. We follow up with the planning officer for you and keep you updated."),
+  ("Will my neighbours be told?", "Yes. The council writes to neighbours or puts up a site notice, and they normally have 21 days to comment. It often helps to tell them about your plans first, and we can advise on how a design affects them."),
+  ("What if the council asks for changes?", "That is part of the job. We discuss any concerns with the planning officer and, where it helps, revise the drawings during the application rather than letting it be refused."),
+  ("What happens if permission is refused?", "You can appeal to the Planning Inspectorate (for householder applications, within 12 weeks of the decision), revise the design to address the reasons for refusal and apply again, or ask the council for pre-application advice. We will recommend the best route based on the reasons given."),
+  ("What is a pre-application enquiry?", "A request to the council for its view on a proposal before a full application is made. It is usually paid. It can be worthwhile for larger or sensitive schemes, and we can tell you whether it is worth it for yours."),
+  ("My house is in a conservation area. Does that change things?", "Yes. Permitted development rights are more limited in conservation areas, and some streets have extra controls (called Article 4 directions). Listed buildings also need listed building consent. Design matters even more, and we know the local guidance well."),
+  ("How long does planning permission last?", "Normally three years from the date of the decision. Work has to start within that time.")]),
+ ("Extensions and lofts", [
+  ("Can I extend a semi-detached house?", "Yes. Single storey rear extensions are often possible under permitted development. Side and two storey extensions usually need planning permission. We will go through the options for your property when we meet."),
+  ("Do I need planning permission for a loft conversion?", "Many loft conversions are permitted development, provided the extra roof space is no more than 40 cubic metres on a terraced house or 50 cubic metres on a detached or semi-detached house. Dormers facing the road need permission, as do most roof changes in conservation areas."),
+  ("Do I need building regulations approval?", "Almost always. Extensions, loft conversions and garage conversions need building regulations approval even when they do not need planning permission. We prepare the building control drawings and specification after planning approval."),
+  ("Do I need a party wall agreement?", "If the work involves a shared wall, or digging foundations close to a neighbour's, the Party Wall Act means you must give your neighbours notice before you start: two months for work on a shared wall and one month for excavations. We point out where it applies and can recommend party wall surveyors."),
+  ("Do you work with structural engineers?", "Yes. We coordinate the structural design with engineers we work with regularly, so the drawings your builder receives are complete.")]),
+ ("Working with us", [
+  ("How much will it cost?", f"Every project is different, so we talk fees through with you in person once we understand what you want to do, and then confirm a fixed quote. Council application fees are paid separately. Call <a href=\"tel:{PHONE_TEL}\">{PHONE}</a> for a chat."),
+  ("Do you deal with the council for me?", "Yes. We submit the application as your agent and deal with the planning officer from start to finish, so you do not have to."),
+  ("Do you prepare building control drawings?", "Yes. After planning approval we prepare the detailed drawings needed for building regulations, including construction details, specification and drainage, and coordinate structural calculations where needed."),
+  ("Can you recommend a builder?", "Yes. We have worked with reliable builders across North London and Hertfordshire for many years and are happy to suggest some when you reach the build stage."),
+  ("Can I see work you have done near me?", "Yes. Our <a href=\"map.html\">project map</a> shows hundreds of approved projects, each linked to the council's record, and you can <a href=\"projects.html\">search them</a> by street, town or type of work."),
+  ("Which areas do you cover?", "Mainly North London and Hertfordshire, and further afield by arrangement. See <a href=\"areas.html\">areas we cover</a>.")])]
+HOME_FAQ = ["Do I always need planning permission for an extension?", "How long does planning permission take?", "Do you come to the property?", "How much will it cost?", "Can I see work you have done near me?"]
+_FAQ_ALL = {q: a for _g, items in FAQ for q, a in items}
+def faq_item(q, a): return f'<details><summary>{q}</summary><p>{a}</p></details>'
+def faq_list(qs): return '<div class="faq">' + "".join(faq_item(q, _FAQ_ALL[q]) for q in qs) + '</div>'
+
 pages = {}
 LEAFLET = '<link rel="stylesheet" href="css/vendor/leaflet.css">\n<link rel="stylesheet" href="css/vendor/MarkerCluster.css">\n'
 MAPJS = ("js/vendor/leaflet.js", "js/vendor/leaflet.markercluster.js", "js/map.js")
@@ -305,9 +532,12 @@ pages["index.html"] = shell("index.html",
 ''' + service_tiles() + '''
 </div></section>
 <section class="section"><div class="wrap">
-<div class="section-head"><div class="stack"><span class="label">Recent approvals</span><h2>Projects we have taken through planning</h2><p class="muted">Every project shown received planning approval. Search by type or town.</p></div><a class="more" href="projects.html">View all projects</a></div>
-''' + filters(False) + '''
-<div class="grid" id="project-list" data-limit="6"></div>
+<div class="section-head"><div class="stack"><span class="label">Featured projects</span><h2>Projects we have taken through planning</h2><p class="muted">A few of our approved projects. Select one for photos, the planning decision and the story behind it.</p></div><a class="more" href="projects.html">View all projects</a></div>
+''' + featured_carousel() + '''
+</div></section>
+<section class="section band"><div class="wrap">
+<div class="section-head"><div class="stack"><span class="label">What are you planning?</span><h2>Start with your house</h2><p class="muted">Choose your type of property and tell us what you have in mind. We will show you approved projects like yours.</p></div><a class="more" href="projects.html#planner">Find work like yours</a></div>
+''' + planner_teaser() + '''
 </div></section>
 <section class="section paper"><div class="wrap map-split">
 <div class="stack" style="gap:20px"><span class="label">Project map</span><h2>See what we have done on your road</h2><p class="lede">Each pin is an approved project. Open one for photos, a short description and a link to the approved plans on the council's website.</p><div><a class="btn btn-navy" href="map.html">Open the full map</a></div></div>
@@ -323,21 +553,26 @@ pages["index.html"] = shell("index.html",
 </div></section>
 <section class="section band" id="reviews"><div class="wrap">
 <div class="section-head"><div class="stack"><span class="label">Client reviews</span><h2>What our clients say</h2></div><a class="more" href="reviews.html">All reviews</a></div>
-''' + reviews_top() + quotes([0, 1, 3]) + '''
+''' + reviews_carousel() + '''
+</div></section>
+<section class="section"><div class="wrap" style="max-width:900px">
+<div class="section-head"><div class="stack"><span class="label">Questions</span><h2>Frequently asked questions</h2></div><a class="more" href="faq.html">All questions</a></div>
+''' + faq_list(HOME_FAQ) + '''
 </div></section>
 <section class="section-sm"><div class="wrap"><div class="cta-box"><div><span class="label">Fees</span><h2>What will my design cost?</h2><p>Answer three quick questions to see what is included for your type of project.</p></div><a class="btn btn-accent" href="fees.html">Estimate my fee</a></div></div></section>
 ''' + CLOSING,
- extra_head=LEAFLET, scripts=("data/projects.js", "js/projects.js") + MAPJS)
+ extra_head=LEAFLET, scripts=("data/projects.js",) + MAPJS + ("js/carousel.js",))
 
 # ---------------- Projects ----------------
 pages["projects.html"] = shell("projects.html", "Our projects | Town & Country Planning Ltd",
  "Approved extensions, loft conversions, new homes and conversions across North London and Hertfordshire. Search by town or type of work.",
  page_head("Projects", "Projects we have taken through planning", "Every project here received planning approval. Search by street, town or type of work, or choose an area.")
  + f'''<section class="section"><div class="wrap">
+{planner()}
 {filters(True)}
 <div class="grid" id="project-list"></div>
 <div class="load-more"><button type="button" class="btn btn-line" id="project-more" hidden>Show more projects</button></div>
-</div></section>''' + CLOSING, scripts=("data/projects.js", "js/projects.js"))
+</div></section>''' + CLOSING, scripts=("data/projects.js", "js/projects.js", "js/planner.js"))
 
 # ---------------- Map ----------------
 pages["map.html"] = shell("map.html", "Project map | Town & Country Planning Ltd",
@@ -369,8 +604,10 @@ SV = [("extensions", "Extensions", "An extension is the most common way to gain 
        ["Pre-application advice", "Permitted development checks", "Planning and householder statements", "Appeals to the Planning Inspectorate"]),
       ("building-control", "Building control drawings", "After planning approval, the work needs building regulations approval. We prepare the detailed drawings and specification your builder needs to price and build correctly, coordinating structural design with engineers we work with regularly.",
        ["Building regulation drawings", "Specification of materials", "Structural coordination", "Drainage layouts", "Responses to building control queries"])]
+SVQ = {"extensions": "q=extension", "lofts": "q=loft", "new-build": "type=New+homes", "conversions": "q=conversion",
+       "outbuildings": "type=Outbuildings+and+garages", "consultancy": "", "building-control": ""}
 sv_html = "".join(f'''<section class="section{" band" if i % 2 else ""}" id="{a}"><div class="wrap split" style="align-items:center">
-<div class="prose"><span class="label">{i+1:02d}</span><h2>{t}</h2><p>{d}</p><div><h3 style="font-size:1rem;margin:8px 0">Includes</h3><ul class="list-cols">{"".join(f"<li>{x}</li>" for x in L)}</ul></div><p><a class="more" href="projects.html">See examples</a></p></div>
+<div class="prose"><span class="label">{i+1:02d}</span><h2>{t}</h2><p>{d}</p><div><h3 style="font-size:1rem;margin:8px 0">Includes</h3><ul class="list-cols">{"".join(f"<li>{x}</li>" for x in L)}</ul></div><p><a class="more" href="projects.html?{SVQ[a]}#project-list">See examples</a></p></div>
 <div class="ph" style="aspect-ratio:4/3"><span>Photo: {t.lower()}</span></div>
 </div></section>''' for i, (a, t, d, L) in enumerate(SV))
 pages["services.html"] = shell("services.html", "Services | Town & Country Planning Ltd",
@@ -416,26 +653,26 @@ for i, a in enumerate(AREAS):
         f"Extensions, loft conversions and new homes in {name}: {', '.join(towns[:4])} and nearby. Planning drawings and applications by Town & Country Planning Ltd. Call {PHONE}.",
         body, extra_head=LEAFLET, scripts=("data/projects.js", "js/projects.js") + MAPJS)
 
-# ---------------- Process + FAQ ----------------
-FAQ = [("Planning permission", [
-  ("Do I always need planning permission for an extension?", "Not always. Many extensions can be built under permitted development rights. As a guide, a single storey rear extension can go out 3 metres on a terraced or semi-detached house and 4 metres on a detached house, or up to 6 and 8 metres through the council's prior approval process. These rights are restricted in conservation areas, on listed buildings and where earlier extensions have used them up. We check your position at the start."),
-  ("How long does planning permission take?", "Councils aim to decide householder applications within eight weeks of validating them, and major applications within 13 weeks. Some councils take longer in busy periods. We follow up with the planning officer for you and keep you updated."),
-  ("What happens if permission is refused?", "You can appeal to the Planning Inspectorate (for householder applications, within 12 weeks of the decision), revise the design to address the reasons for refusal and apply again, or ask the council for pre-application advice. We will recommend the best route based on the reasons given."),
-  ("What is a pre-application enquiry?", "A request to the council for its view on a proposal before a full application is made. It is usually paid. It can be worthwhile for larger or sensitive schemes, and we can tell you whether it is worth it for yours.")]),
- ("Extensions and lofts", [
-  ("Can I extend a semi-detached house?", "Yes. Single storey rear extensions are often possible under permitted development. Side and two storey extensions usually need planning permission. We will go through the options for your property when we meet."),
-  ("Do I need planning permission for a loft conversion?", "Many loft conversions are permitted development, provided the extra roof space is no more than 40 cubic metres on a terraced house or 50 cubic metres on a detached or semi-detached house. Dormers facing the road need permission, as do most roof changes in conservation areas.")]),
- ("Working with us", [
-  ("How much does it cost?", "Fees depend on the type and size of project. We give you a fixed quote once we understand what you want to do. Council application fees are paid separately. Our <a href=\"fees.html\">fees page</a> gives a guide."),
-  ("Do you prepare building control drawings?", "Yes. After planning approval we prepare the detailed drawings needed for building regulations, including construction details, specification and drainage, and coordinate structural calculations where needed."),
-  ("Can you recommend a builder?", "Yes. We have worked with reliable builders across North London and Hertfordshire for many years and are happy to suggest some when you reach the build stage."),
-  ("Which areas do you cover?", "Mainly North London and Hertfordshire, and further afield by arrangement. See <a href=\"areas.html\">areas we cover</a>.")])]
-faq_html = "".join(f'<h3>{g}</h3>' + "".join(f'<details><summary>{q}</summary><p>{a}</p></details>' for q, a in items) for g, items in FAQ)
+# ---------------- Process ----------------
 pages["process.html"] = shell("process.html", "How we work | Town & Country Planning Ltd",
  "Our five step process from consultation to planning approval and building control, with answers to common planning questions.",
  '<section class="section band-navy"><div class="wrap stack" style="gap:48px"><div class="stack" style="gap:16px;max-width:760px"><span class="label">How we work</span><h1>From first conversation to approved plans</h1><p class="lede" style="color:var(--on-navy-muted)">Five clear steps, with one team handling everything and keeping you informed throughout.</p></div>'
  + timeline() + '</div></section>'
- + f'<section class="section" id="faq"><div class="wrap faq" style="max-width:900px"><span class="label">Questions</span><h2 style="margin-top:12px">Common questions</h2>{faq_html}</div></section>' + CLOSING)
+ + f'<section class="section" id="faq"><div class="wrap" style="max-width:900px"><div class="section-head"><div class="stack"><span class="label">Questions</span><h2>Common questions</h2></div><a class="more" href="faq.html">All questions</a></div>{faq_list(["Where do I start?", "Do I always need planning permission for an extension?", "How long does planning permission take?", "Do I need building regulations approval?"])}</div></section>' + CLOSING)
+
+# ---------------- FAQ page ----------------
+def _plain(a):
+    import re
+    return H.unescape(re.sub(r"<[^>]+>", "", a))
+faq_ld = '<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": _plain(a)}} for _g, items in FAQ for q, a in items]}) + '</script>\n'
+faq_toc = "".join(f'<a href="#faq-{i}">{g}</a>' for i, (g, _x) in enumerate(FAQ))
+faq_body = "".join(f'<section class="faq-group" id="faq-{i}" aria-labelledby="faq-{i}-h"><h2 id="faq-{i}-h">{g}</h2><div class="faq">' + "".join(faq_item(q, a) for q, a in items) + '</div></section>' for i, (g, items) in enumerate(FAQ))
+pages["faq.html"] = shell("faq.html", "Frequently asked questions | Town & Country Planning Ltd",
+ "Answers to common questions about planning permission, permitted development, loft conversions, extensions, building regulations, party walls and working with us.",
+ page_head("FAQ", "Frequently asked questions", "Straight answers to the questions we are asked most. If yours is not here, call us: we are happy to talk it through.")
+ + f'<section class="section"><div class="wrap faq-layout"><nav class="faq-toc" aria-label="Question topics"><span class="label">Topics</span>{faq_toc}</nav><div>{faq_body}</div></div></section>' + CLOSING,
+ extra_head=faq_ld)
 
 # ---------------- Fees ----------------
 PROJ_OPTS = ["Rear or side extension", "Loft conversion", "Extension and loft", "Garage or garden room", "New build", "Not sure yet"]
@@ -465,7 +702,9 @@ pages["fees.html"] = shell("fees.html", "Fees | Town & Country Planning Ltd",
 pages["reviews.html"] = shell("reviews.html", "Client reviews | Town & Country Planning Ltd",
  "What our clients say about working with Town & Country Planning Ltd on their extensions, loft conversions and new homes.",
  page_head("Reviews", "What our clients say", "Most of our work comes from recommendation, often from clients who come back for their next project.")
- + '<section class="section"><div class="wrap">' + reviews_top() + quotes(range(len(Q))) + '</div></section>' + CLOSING)
+ + '<section class="section"><div class="wrap">' + reviews_carousel() + '</div></section>'
+ + '<section class="section band"><div class="wrap"><div class="section-head"><div class="stack"><span class="label">All reviews</span><h2>Every review in full</h2></div></div>' + quotes(range(len(Q))) + '</div></section>' + CLOSING,
+ scripts=("js/carousel.js",))
 
 # ---------------- About ----------------
 pages["about.html"] = shell("about.html", "About us | Town & Country Planning Ltd",
@@ -526,6 +765,9 @@ pages["contact.html"] = shell("contact.html", "Contact us | Town & Country Plann
 </form>
 </div></section>''', scripts=("js/contact.js",))
 
+for _i in range(len(FEATURED)):
+    pages[feat_url(FEATURED[_i][1])] = featured_page(_i)
+
 pages["404.html"] = shell("404.html", "Page not found | Town & Country Planning Ltd", "Page not found.",
  '<section class="section"><div class="wrap stack"><span class="label">404</span><h1>Page not found</h1><p class="lede">That page has moved or no longer exists.</p><div class="actions"><a class="btn btn-navy" href="index.html">Go to the homepage</a><a class="btn btn-line" href="projects.html">Browse projects</a></div></div></section>')
 
@@ -535,7 +777,6 @@ for name, doc in pages.items():
 redirect = lambda target, title: f'''<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>{title}</title><meta http-equiv="refresh" content="0; url={target}"><link rel="canonical" href="{SITE}{target}"><meta name="robots" content="noindex"></head><body><p>This page has moved to <a href="{target}">{target}</a>.</p></body></html>
 '''
 open(os.path.join(OUT, "gallery.html"), "w").write(redirect("projects.html", "Our projects"))
-open(os.path.join(OUT, "faq.html"), "w").write(redirect("process.html#faq", "How we work"))
 urls = [""] + [n for n in pages if n not in ("index.html", "404.html")]
 open(os.path.join(OUT, "sitemap.xml"), "w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(f"  <url><loc>{SITE}{u}</loc></url>\n" for u in urls) + "</urlset>\n")
 open(os.path.join(OUT, "robots.txt"), "w").write(f"User-agent: *\nAllow: /\n\nSitemap: {SITE}sitemap.xml\n")

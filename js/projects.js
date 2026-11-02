@@ -77,7 +77,23 @@
     var params = new URLSearchParams(location.search);
     if (params.get('area') && areaSel) { areaSel.value = params.get('area'); state.area = areaSel.value; }
     if (params.get('q') && search) { search.value = params.get('q'); state.q = search.value.toLowerCase(); }
+    if (params.get('type') && typeSel) { typeSel.value = params.get('type'); state.type = typeSel.value; }
   } catch (e) {}
+
+  // used by the "What are you planning?" questions on the projects page
+  window.TCPProjects = {
+    count: function (o) {
+      var keep = state; state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '' };
+      var n = all.filter(matches).length; state = keep; return n;
+    },
+    set: function (o) {
+      state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '' };
+      if (search) search.value = o.q || '';
+      if (typeSel) typeSel.value = o.type || '';
+      [areaSel, yearSel, routeSel].forEach(function (f) { if (f) f.value = ''; });
+      reset();
+    }
+  };
 
   function matches(p) {
     if (state.type && p.type !== state.type) return false;
