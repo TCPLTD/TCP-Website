@@ -335,12 +335,22 @@ def _featured():
     return json.loads(txt[txt.index("= [") + 2:txt.rindex("]") + 1])
 BY_ID = {p["id"]: p for p in PROJECTS}
 FEATURED = []
-for _f in _featured():
-    _p = BY_ID.get(_f["id"]) or (None if _f.get("standalone") else next((p for p in PROJECTS if p.get("street") == _f.get("street") and p["town"] == _f.get("town")), None))
+def _by_ref(ref):
+    return next((p for p in PROJECTS if any(a.get("ref") == ref for a in p.get("approvals", []))), None) if ref else None
+_FEAT_SRC = _featured()
+for _f in _FEAT_SRC:
+    # match on the council ref first: project ids are renumbered whenever the job sheet is re-imported
+    _p = _by_ref(_f.get("ref")) or BY_ID.get(_f["id"]) or (None if _f.get("standalone") else next((p for p in PROJECTS if p.get("street") == _f.get("street") and p["town"] == _f.get("town")), None))
     if not _p and _f.get("standalone"):
         # a featured job that is not in the approvals data (e.g. building control only, or decided after the last data refresh)
         _p = dict(_f["standalone"], id=_f["id"], street=_f.get("street", ""), town=_f.get("town", ""), nomap=True)
-    if _p: FEATURED.append((_f, _p))
+    if _p:
+        if not _f.get("standalone") and _f["id"] != _p["id"]: _f["id"] = _p["id"]
+        FEATURED.append((_f, _p))
+# keep data/featured.js ids in step with data/projects.js (the map and project list link featured jobs by id)
+_fj = os.path.join(OUT, "data", "featured.js"); _ft = open(_fj, encoding="utf-8").read()
+_new = _ft[:_ft.index("= [") + 2] + "[\n" + ",\n".join(json.dumps(f, ensure_ascii=False) for f in _FEAT_SRC) + "\n];\n"
+if _new != _ft: open(_fj, "w", encoding="utf-8").write(_new)
 
 def feat_url(p): return f'project-{p["id"]}.html'
 def feat_place(p): return f'{p["street"]}, {p["town"]}' if p.get("street") else p["town"]
