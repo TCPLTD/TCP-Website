@@ -430,7 +430,7 @@ def case_extras(f):
     if bf and not pairs:
         def bfig(x):
             w, h = img_size(x["src"])
-            return (f'<figure><img src="{esc(x["src"])}" alt="{esc(x.get("caption") or f["title"] + ", before the work")}" width="{w}" height="{h}" loading="lazy">'
+            return (f'<figure><img src="{esc(x["src"])}" alt="{esc(f["title"] + (": " + x["caption"] if x.get("caption") else "") + ", before the work")}" width="{w}" height="{h}" loading="lazy">'
                     + (f'<figcaption>{esc(x["caption"])}</figcaption>' if x.get("caption") else "") + '</figure>')
         out += (f'<div class="bf"><div class="section-head ba-head"><div><span class="label">Before the work</span><h2>How the house looked before</h2>'
                 f'<p class="muted">Photos of the finished house are to come.</p></div></div>'
@@ -463,7 +463,7 @@ def featured_page(i):
         # a full width slideshow: swipe, arrows, or it moves on by itself
         slides = "".join(
             f'<figure class="ss-slide" role="group" aria-roledescription="slide" aria-label="{k+1} of {len(photos)}">'
-            f'<img src="{esc(x)}" alt="{esc(caps[k] if k < len(caps) else f["title"] + ", photo " + str(k+1))}"{" loading=\"lazy\"" if k else ""}>'
+            f'<img src="{esc(x)}" alt="{esc(f["title"] + ": " + caps[k] if k < len(caps) else f["title"] + ", photo " + str(k+1))}"{" loading=\"lazy\"" if k else ""}>'
             + (f'<figcaption>{esc(caps[k])}</figcaption>' if k < len(caps) else "") + '</figure>' for k, x in enumerate(photos))
         show = (f'<section class="ss" data-slideshow aria-roledescription="carousel" aria-label="Photos of the finished project">'
                 f'<div class="ss-track" tabindex="0">{slides}</div>'
