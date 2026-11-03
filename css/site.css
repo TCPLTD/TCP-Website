@@ -611,6 +611,11 @@ form.enquiry .btn { margin-top: 10px; }
 .cmp-tag { position: absolute; top: 10px; padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; pointer-events: none; }
 .cmp-l { left: 10px; background: #E3E8EE; color: #173B53; }
 .cmp-r { right: 10px; background: #2E74B5; color: #fff; }
+.bf { display: flex; flex-direction: column; }
+.bf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px 14px; }
+.bf-grid figure { margin: 0; }
+.bf-grid img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius); }
+.bf-grid figcaption { font-size: .95rem; color: var(--muted, #4A5563); margin-top: 6px; }
 .ba, .dw { display: flex; flex-direction: column; }
 .ba-head > div:first-child { display: flex; flex-direction: column; align-items: flex-start; }
 .cmp-pane { max-width: 920px; width: 100%; margin: 0 auto; }

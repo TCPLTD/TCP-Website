@@ -426,6 +426,15 @@ def case_extras(f):
             for k, x in enumerate(pairs))
         out += (f'<div class="ba" data-tabs><div class="section-head ba-head"><div><span class="label">Before and after</span><h2>How it looked, and how it looks now</h2><p class="muted">Pick a part of the house to compare.</p></div>'
                 f'<div class="ba-tabs" role="tablist" aria-label="Part of the house">{tabs}</div></div>{panes}</div>')
+    bf = f.get("before") or []
+    if bf and not pairs:
+        def bfig(x):
+            w, h = img_size(x["src"])
+            return (f'<figure><img src="{esc(x["src"])}" alt="{esc(x.get("caption") or f["title"] + ", before the work")}" width="{w}" height="{h}" loading="lazy">'
+                    + (f'<figcaption>{esc(x["caption"])}</figcaption>' if x.get("caption") else "") + '</figure>')
+        out += (f'<div class="bf"><div class="section-head ba-head"><div><span class="label">Before the work</span><h2>How the house looked before</h2>'
+                f'<p class="muted">Photos of the finished house are to come.</p></div></div>'
+                f'<div class="bf-grid">{"".join(bfig(x) for x in bf)}</div></div>')
     d = f.get("drawings")
     if d and d.get("views"):
         vs = d["views"]
