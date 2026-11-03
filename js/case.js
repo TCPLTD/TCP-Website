@@ -75,17 +75,16 @@
     }
   });
 
-  // Drag slider between two drawings. When it first comes into view it sweeps across by
-  // itself to show what changes, until the visitor grabs it.
-  var touched = false;
+  // Drag slider between two drawings. It sweeps across once by itself (to one side, to the other,
+  // then back to the middle) when it first comes into view and each time its tab is picked.
+  // Grabbing it stops the sweep straight away.
   function sweep(box, range) {
-    if (still || touched || box.dataset.swept || !box.offsetParent) return;
-    box.dataset.swept = '1';
-    // 50 -> 85 -> 15 -> 50, twice, about 7 seconds in all
-    var keys = [50, 85, 15, 85, 15, 50], seg = 1150, t0 = null;
+    if (still || !box.offsetParent) return;
+    var run = (box._run || 0) + 1; box._run = run;
+    var keys = [50, 85, 15, 50], seg = 1100, t0 = null;
     function set(v) { box.style.setProperty('--pos', v + '%'); range.value = Math.round(v); }
     function frame(ts) {
-      if (touched) return;
+      if (box._run !== run) return;
       if (t0 === null) t0 = ts;
       var e = ts - t0, i = Math.floor(e / seg);
       if (i >= keys.length - 1) { set(50); return; }
@@ -93,19 +92,23 @@
       set(keys[i] + (keys[i + 1] - keys[i]) * f);
       requestAnimationFrame(frame);
     }
-    setTimeout(function () { requestAnimationFrame(frame); }, 400);
+    setTimeout(function () { if (box._run === run) requestAnimationFrame(frame); }, 350);
   }
   document.querySelectorAll('[data-compare]').forEach(function (box) {
     var range = box.querySelector('input[type="range"]');
-    function grab() { touched = true; document.querySelectorAll('.cmp').forEach(function (b) { b.classList.add('cmp-used'); }); }
+    function grab() {
+      box._run = (box._run || 0) + 1;   // stop any sweep
+      document.querySelectorAll('.cmp').forEach(function (b) { b.classList.add('cmp-used'); });
+    }
     range.addEventListener('input', function () { box.style.setProperty('--pos', range.value + '%'); });
-    ['pointerdown', 'touchstart', 'keydown', 'focus'].forEach(function (ev) { range.addEventListener(ev, grab, { passive: true }); });
+    ['pointerdown', 'touchstart', 'keydown'].forEach(function (ev) { range.addEventListener(ev, grab, { passive: true }); });
     if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (es, ob) {
-        es.forEach(function (e) { if (e.isIntersecting && e.intersectionRatio > .5) sweep(box, range); });
+      var seen = false;
+      new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (!seen && e.isIntersecting && e.intersectionRatio > .5 && box.offsetParent) { seen = true; sweep(box, range); } });
       }, { threshold: [0, .5, .6] }).observe(box);
     }
     var pane = box.closest('[role="tabpanel"]');
-    if (pane) pane.addEventListener('paneshown', function () { setTimeout(function () { sweep(box, range); }, 50); });
+    if (pane) pane.addEventListener('paneshown', function () { setTimeout(function () { sweep(box, range); }, 30); });
   });
 })();
