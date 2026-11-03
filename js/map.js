@@ -3,9 +3,9 @@
   if (!box || !window.L) return;
   var borough = box.getAttribute('data-borough') || '';
   var projects = (window.TCP_PROJECTS || []).filter(function (p) { return typeof p.lat === 'number' && typeof p.lng === 'number' && (!borough || p.borough === borough); });
-  var map = L.map(box, { scrollWheelZoom: false, maxZoom: 17 }).setView([51.67, -0.2], 11);
+  var map = L.map(box, { scrollWheelZoom: false, maxZoom: 19 }).setView([51.67, -0.2], 11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 17,
+    maxZoom: 19,
     className: 'map-tiles',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
