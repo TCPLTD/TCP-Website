@@ -395,11 +395,13 @@ def case_extras(f):
     if pairs:
         tabs = "".join(f'<button type="button" role="tab" id="ba-tab-{k}" aria-controls="ba-{k}" aria-selected="{"true" if k == 0 else "false"}"{"" if k == 0 else " tabindex=\"-1\""}>{esc(x["label"])}</button>' for k, x in enumerate(pairs))
         panes = "".join(
-            f'<div class="ba-pair" role="tabpanel" id="ba-{k}" aria-labelledby="ba-tab-{k}"{"" if k == 0 else " hidden"}>'
-            f'<figure><img src="{esc(x["before"])}" alt="{esc(x["label"])} before the work" loading="lazy"><figcaption><span class="tag tag-before">Before</span></figcaption></figure>'
-            f'<figure><img src="{esc(x["after"])}" alt="{esc(x["label"])} after the work" loading="lazy"><figcaption><span class="tag tag-after">After</span></figcaption></figure></div>'
+            f'<div class="cmp-pane" role="tabpanel" id="ba-{k}" aria-labelledby="ba-tab-{k}"{"" if k == 0 else " hidden"}>'
+            f'<div class="cmp cmp-photo" data-compare style="--pos:50%"><img src="{esc(x["before"])}" alt="{esc(x["label"])} before the work" loading="lazy">'
+            f'<img class="cmp-after" src="{esc(x["after"])}" alt="{esc(x["label"])} after the work" loading="lazy">'
+            f'<span class="cmp-tag cmp-l">Before</span><span class="cmp-tag cmp-r">After</span><span class="cmp-line" aria-hidden="true"></span>'
+            f'<input type="range" min="0" max="100" value="50" aria-label="Slide between before and after, {esc(x["label"].lower())}"></div></div>'
             for k, x in enumerate(pairs))
-        out += (f'<div class="ba" data-tabs data-autoplay="6000"><div class="section-head ba-head"><div><span class="label">Before and after</span><h2>How it looked, and how it looks now</h2></div>'
+        out += (f'<div class="ba" data-tabs><div class="section-head ba-head"><div><span class="label">Before and after</span><h2>How it looked, and how it looks now</h2><p class="muted">Drag the slider across each photo.</p></div>'
                 f'<div class="ba-tabs" role="tablist" aria-label="Part of the house">{tabs}</div></div>{panes}</div>')
     d = f.get("drawings")
     if d and d.get("views"):
