@@ -224,7 +224,13 @@ def reviews_top():
 <div class="actions"><a class="btn btn-navy" href="{GOOGLE_REVIEWS}" target="_blank" rel="noopener">Review us on Google</a><a class="btn btn-line" href="{GOOGLE_REVIEWS}" target="_blank" rel="noopener">Read our Google reviews</a></div></div>'''
 
 def filters(full=True):
-    selects = ('<label class="fl"><span>Area</span><select id="project-area"><option value="">All areas</option></select></label>'
+    selects = ('<div class="fl fl-area"><span id="area-lbl">Areas</span><div class="ms" id="project-area">'
+               '<button type="button" class="ms-btn" aria-expanded="false" aria-controls="area-panel" aria-labelledby="area-lbl area-val"><span id="area-val">All areas</span></button>'
+               '<div class="ms-panel" id="area-panel" hidden><p class="ms-hint">Tick as many as you like</p>'
+               '<input type="search" class="ms-find" placeholder="Find a town or council" aria-label="Find a town or council">'
+               '<fieldset><legend>Councils</legend><div class="ms-list" data-group="b"></div></fieldset>'
+               '<fieldset><legend>Towns</legend><div class="ms-list" data-group="t"></div></fieldset>'
+               '<div class="ms-foot"><button type="button" class="btn btn-line" data-ms-clear>Clear areas</button><button type="button" class="btn btn-navy" data-ms-done>Done</button></div></div></div></div>'
                '<label class="fl"><span>Year</span><select id="project-year"><option value="">Any year</option></select></label>') if full else ''
     return (f'<div class="filter-panel"><div class="filter-row"><label class="fl fl-search"><span>Search projects</span>'
             f'<input id="project-search" type="search" placeholder="Street, town, or e.g. loft"></label>'

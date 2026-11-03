@@ -29,9 +29,57 @@
   function fill(sel, values) { if (!sel) return; values.forEach(function (v) { var o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); }); }
   function place(p) { return p.street ? p.street + ', ' + p.town : p.town; }
 
-  var boroughCounts = {};
-  all.forEach(function (p) { boroughCounts[p.borough] = (boroughCounts[p.borough] || 0) + 1; });
-  fill(areaSel, Object.keys(boroughCounts).filter(function (b) { return b !== 'Other'; }).sort(function (a, b) { return boroughCounts[b] - boroughCounts[a]; }).concat(boroughCounts.Other ? ['Other'] : []));
+  var boroughCounts = {}, townCounts = {};
+  all.forEach(function (p) {
+    boroughCounts[p.borough] = (boroughCounts[p.borough] || 0) + 1;
+    if (p.town) townCounts[p.town] = (townCounts[p.town] || 0) + 1;
+  });
+
+  // Areas: tick any mix of councils and towns, e.g. Barnet and Potters Bar
+  var areaPick = (function (root) {
+    if (!root) return null;
+    var btn = root.querySelector('.ms-btn'), panel = root.querySelector('.ms-panel'), val = root.querySelector('#area-val');
+    var find = root.querySelector('.ms-find'), boxes = [];
+    function byCount(c) { return function (a, b) { return c[b] - c[a] || (a < b ? -1 : 1); }; }
+    function add(group, name, n) {
+      var lab = el('label', 'ms-opt'), cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.value = group + ':' + name;
+      lab.appendChild(cb);
+      lab.appendChild(el('span', null, group === 'b' && name === 'Other' ? 'Further afield' : name));
+      lab.appendChild(el('span', 'count', '(' + n + ')'));
+      root.querySelector('[data-group="' + group + '"]').appendChild(lab);
+      cb.addEventListener('change', changed);
+      boxes.push(cb);
+    }
+    Object.keys(boroughCounts).sort(function (a, b) { return a === 'Other' ? 1 : b === 'Other' ? -1 : boroughCounts[b] - boroughCounts[a]; }).forEach(function (b) { add('b', b, boroughCounts[b]); });
+    Object.keys(townCounts).sort(byCount(townCounts)).forEach(function (n) { add('t', n, townCounts[n]); });
+    function picked() { return boxes.filter(function (c) { return c.checked; }).map(function (c) { return c.value; }); }
+    function label() {
+      var v = picked().map(function (k) { var n = k.slice(2); return k === 'b:Other' ? 'Further afield' : n; });
+      val.textContent = !v.length ? 'All areas' : v.length <= 2 ? v.join(' and ') : v[0] + ' and ' + (v.length - 1) + ' more';
+    }
+    function changed() { label(); state.area = picked(); reset(); }
+    function open(o) {
+      panel.hidden = !o; btn.setAttribute('aria-expanded', o ? 'true' : 'false');
+      if (o) find.focus();
+    }
+    btn.addEventListener('click', function () { open(panel.hidden); });
+    root.querySelector('[data-ms-done]').addEventListener('click', function () { open(false); btn.focus(); });
+    root.querySelector('[data-ms-clear]').addEventListener('click', function () { set([]); changed(); });
+    find.addEventListener('input', function () {
+      var q = find.value.trim().toLowerCase();
+      boxes.forEach(function (c) { c.parentNode.hidden = q && c.value.slice(2).toLowerCase().indexOf(q) === -1; });
+    });
+    root.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) { open(false); btn.focus(); } });
+    document.addEventListener('click', function (e) { if (!panel.hidden && !root.contains(e.target)) open(false); });
+    function set(keys) { boxes.forEach(function (c) { c.checked = keys.indexOf(c.value) !== -1; }); label(); }
+    return { set: set };
+  })(areaSel);
+  function inArea(p) {
+    var a = state.area;
+    if (!a || !a.length) return true;
+    return a.indexOf('b:' + p.borough) !== -1 || a.indexOf('t:' + p.town) !== -1;
+  }
   fill(yearSel, uniq(all.map(function (p) { return p.year; })).sort(function (a, b) { return b - a; }));
   fill(routeSel, uniq([].concat.apply([], all.map(routes))).sort());
 
@@ -64,12 +112,13 @@
 
   function reset() { shownCount = PAGE; render(); }
   if (search) search.addEventListener('input', function () { state.q = search.value.trim().toLowerCase(); reset(); });
-  [[typeSel, 'type'], [areaSel, 'area'], [yearSel, 'year'], [routeSel, 'route']].forEach(function (pair) {
+  [[typeSel, 'type'], [yearSel, 'year'], [routeSel, 'route']].forEach(function (pair) {
     if (pair[0]) pair[0].addEventListener('change', function () { state[pair[1]] = pair[0].value; reset(); });
   });
   if (clear) clear.addEventListener('click', function () {
     state = { type: '', q: '', area: '', year: '', route: '' };
-    [search, typeSel, areaSel, yearSel, routeSel].forEach(function (f) { if (f) f.value = ''; });
+    [search, typeSel, yearSel, routeSel].forEach(function (f) { if (f) f.value = ''; });
+    if (areaPick) areaPick.set([]);
     reset();
   });
   if (more) more.addEventListener('click', function () { shownCount += PAGE; render(); });
@@ -77,7 +126,10 @@
   // allow links such as projects.html?area=Hertsmere or ?q=loft
   try {
     var params = new URLSearchParams(location.search);
-    if (params.get('area') && areaSel) { areaSel.value = params.get('area'); state.area = areaSel.value; }
+    if (params.get('area') && areaPick) {
+      state.area = params.getAll('area').join(',').split(',').map(function (a) { return (boroughCounts[a] ? 'b:' : 't:') + a; });
+      areaPick.set(state.area);
+    }
     if (params.get('q') && search) { search.value = params.get('q'); state.q = search.value.toLowerCase(); }
     if (params.get('type') && typeSel) { typeSel.value = params.get('type'); state.type = typeSel.value; }
   } catch (e) {}
@@ -105,7 +157,8 @@
       state = { type: o.type || '', q: (o.q || '').toLowerCase(), area: '', year: '', route: '', boost: o.boost || [] };
       if (search) search.value = o.q || '';
       if (typeSel) typeSel.value = o.type || '';
-      [areaSel, yearSel, routeSel].forEach(function (f) { if (f) f.value = ''; });
+      [yearSel, routeSel].forEach(function (f) { if (f) f.value = ''; });
+      if (areaPick) areaPick.set([]);
       reset();
     }
   };
@@ -246,7 +299,7 @@
 
   function matches(p) {
     if (state.type && p.type !== state.type) return false;
-    if (state.area && p.borough !== state.area) return false;
+    if (!inArea(p)) return false;
     if (state.year && String(p.year) !== state.year) return false;
     if (state.route && routes(p).indexOf(state.route) === -1) return false;
     if (parsed.words.length) {
@@ -330,7 +383,7 @@
 
   function render() {
     chips.forEach(function (c) { c.setAttribute('aria-pressed', c._type === state.type ? 'true' : 'false'); });
-    var filtering = !!(state.type || state.q || state.area || state.year || state.route);
+    var filtering = !!(state.type || state.q || (state.area && state.area.length) || state.year || state.route);
     if (clear) clear.hidden = !filtering;
     parseQuery();
     var found = all.filter(matches), relaxed = false;
