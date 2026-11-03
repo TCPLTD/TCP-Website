@@ -4,6 +4,7 @@ import os, sys, json, html as H
 from urllib.parse import quote_plus
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "."
+ROOT_FOR_IMG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 SITE = "https://townandcountryplanningltd.co.uk/"
 PHONE, PHONE_TEL, EMAIL = "07843 561129", "07843561129", "martin@tcpltd.net"
 GOOGLE_REVIEWS = "https://www.google.com/search?q=Town+%26+Country+Planning+Ltd+Cockfosters"  # replace with the Google review link when available
@@ -388,20 +389,42 @@ def featured_carousel():
 </div>
 </section>'''
 
+def img_size(src):
+    """Width and height of a JPEG or PNG in the site folder, so photos keep their own shape."""
+    try:
+        with open(os.path.join(ROOT_FOR_IMG, src), "rb") as fh:
+            d = fh.read()
+        if d[:8] == b"\x89PNG\r\n\x1a\n":
+            return int.from_bytes(d[16:20], "big"), int.from_bytes(d[20:24], "big")
+        i = 2
+        while i < len(d):
+            if d[i] != 0xFF:
+                i += 1; continue
+            m = d[i + 1]
+            if m in (0xC0, 0xC1, 0xC2):
+                return int.from_bytes(d[i + 7:i + 9], "big"), int.from_bytes(d[i + 5:i + 7], "big")
+            i += 2 + int.from_bytes(d[i + 2:i + 4], "big")
+    except OSError:
+        pass
+    return 4, 3
+
 def case_extras(f):
     """Before and after photos, and existing vs approved drawings, for a featured project that has them."""
     out = ""
     pairs = f.get("pairs") or []
     if pairs:
         tabs = "".join(f'<button type="button" role="tab" id="ba-tab-{k}" aria-controls="ba-{k}" aria-selected="{"true" if k == 0 else "false"}"{"" if k == 0 else " tabindex=\"-1\""}>{esc(x["label"])}</button>' for k, x in enumerate(pairs))
+        def fig(src, alt, tag, cls):
+            w, h = img_size(src)
+            return (f'<figure style="flex:{w / h:.3f} 1 0"><img src="{esc(src)}" alt="{esc(alt)}" width="{w}" height="{h}" loading="lazy">'
+                    f'<figcaption><span class="tag {cls}">{tag}</span></figcaption></figure>')
         panes = "".join(
-            f'<div class="cmp-pane" role="tabpanel" id="ba-{k}" aria-labelledby="ba-tab-{k}"{"" if k == 0 else " hidden"}>'
-            f'<div class="cmp cmp-photo" data-compare style="--pos:50%"><img src="{esc(x["before"])}" alt="{esc(x["label"])} before the work" loading="lazy">'
-            f'<img class="cmp-after" src="{esc(x["after"])}" alt="{esc(x["label"])} after the work" loading="lazy">'
-            f'<span class="cmp-tag cmp-l">Before</span><span class="cmp-tag cmp-r">After</span><span class="cmp-line" aria-hidden="true"></span>'
-            f'<input type="range" min="0" max="100" value="50" aria-label="Slide between before and after, {esc(x["label"].lower())}"></div></div>'
+            f'<div class="cmp-pane ba-pane" role="tabpanel" id="ba-{k}" aria-labelledby="ba-tab-{k}"{"" if k == 0 else " hidden"}><div class="ba-pair">'
+            + fig(x["before"], x["label"] + " before the work", "Before", "tag-before")
+            + fig(x["after"], x["label"] + " after the work", "After", "tag-after")
+            + '</div></div>'
             for k, x in enumerate(pairs))
-        out += (f'<div class="ba" data-tabs><div class="section-head ba-head"><div><span class="label">Before and after</span><h2>How it looked, and how it looks now</h2><p class="muted">Drag the slider across each photo.</p></div>'
+        out += (f'<div class="ba" data-tabs><div class="section-head ba-head"><div><span class="label">Before and after</span><h2>How it looked, and how it looks now</h2><p class="muted">Pick a part of the house to compare.</p></div>'
                 f'<div class="ba-tabs" role="tablist" aria-label="Part of the house">{tabs}</div></div>{panes}</div>')
     d = f.get("drawings")
     if d and d.get("views"):
