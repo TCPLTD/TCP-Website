@@ -648,7 +648,7 @@ pages["index.html"] = shell("index.html",
 ''' + service_tiles() + '''
 </div></section>
 <section class="section band"><div class="wrap">
-<div class="section-head"><div class="stack"><span class="label">Our work</span><h2>Recent approved projects</h2></div><a class="more" href="projects.html">Search all projects on the map</a></div>
+<div class="section-head"><div class="stack"><span class="label">Our work</span><h2>Featured projects</h2></div><a class="more" href="projects.html">Search all projects on the map</a></div>
 ''' + featured_carousel() + '''
 </div></section>
 <section class="section"><div class="wrap why">
