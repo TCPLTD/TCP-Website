@@ -13,7 +13,50 @@
   map.on('focus click', function () { map.scrollWheelZoom.enable(); });
   map.on('blur mouseout', function () { map.scrollWheelZoom.disable(); });
 
-  var pin = L.divIcon({ className: 'tcp-pin', html: '<span></span>', iconSize: [22, 22], iconAnchor: [11, 11], popupAnchor: [0, -12] });
+  // one colour per type of work, matching the Google My Maps version (lofts red)
+  var TYPES = [
+    ['Loft conversion', '#D63B30'],
+    ['Extension', '#1F6FB2'],
+    ['Extension and loft', '#7A3FA0'],
+    ['New homes', '#1E8A4C'],
+    ['Flats and change of use', '#E07800'],
+    ['Outbuildings and garages', '#C99A00'],
+    ['Porch and front', '#D2467F'],
+    ['Other works', '#3A9FCF']
+  ];
+  var COLOUR = {};
+  TYPES.forEach(function (t) { COLOUR[t[0]] = t[1]; });
+  var icons = {};
+  function pinFor(type) {
+    var c = COLOUR[type] || '#173B53';
+    if (!icons[c]) icons[c] = L.divIcon({
+      className: 'tcp-pin',
+      html: '<svg viewBox="0 0 28 38" width="28" height="38" aria-hidden="true" focusable="false">' +
+        '<path d="M14 1C6.8 1 1 6.7 1 13.8 1 23.4 14 37 14 37s13-13.6 13-23.2C27 6.7 21.2 1 14 1z" fill="' + c + '" stroke="#fff" stroke-width="2"/>' +
+        '<circle cx="14" cy="13.6" r="4.6" fill="#fff"/></svg>',
+      iconSize: [28, 38], iconAnchor: [14, 37], popupAnchor: [0, -34]
+    });
+    return icons[c];
+  }
+
+  // key to the pin colours, inside the map
+  var Key = L.Control.extend({
+    options: { position: 'bottomleft' },
+    onAdd: function () {
+      var counts = {};
+      projects.forEach(function (p) { counts[p.type] = (counts[p.type] || 0) + 1; });
+      var d = L.DomUtil.create('details', 'map-key');
+      if (window.matchMedia && !window.matchMedia('(max-width: 640px)').matches) d.open = true;
+      var rows = TYPES.filter(function (t) { return counts[t[0]]; }).map(function (t) {
+        return '<li><i style="background:' + t[1] + '"></i>' + t[0] + '</li>';
+      }).join('');
+      d.innerHTML = '<summary>Key</summary><ul>' + rows + '</ul>';
+      L.DomEvent.disableClickPropagation(d);
+      L.DomEvent.disableScrollPropagation(d);
+      return d;
+    }
+  });
+  new Key().addTo(map);
   var group = L.markerClusterGroup ? L.markerClusterGroup({
     showCoverageOnHover: false,
     maxClusterRadius: 48,
@@ -39,7 +82,7 @@
         (a.link ? '<a href="' + esc(a.link) + '" target="_blank" rel="noopener">Council record for this job</a>' : '') + '</span></li>';
     }).join('');
     return '<div class="pin-card">' + img +
-      '<span class="pin-type">' + esc((p.approvals || []).length > 1 ? p.approvals.length + ' approved jobs' : (p.type === 'Other approvals' ? 'Planning approval' : p.type)) + '</span>' +
+      '<span class="pin-type"><i class="pin-dot" style="background:' + (COLOUR[p.type] || '#173B53') + '"></i>' + esc(p.type) + ((p.approvals || []).length > 1 ? ' · ' + p.approvals.length + ' approved jobs' : '') + '</span>' +
       '<strong>' + esc(place(p)) + '</strong>' +
       '<div class="meta">' + esc(p.borough === 'Other' ? 'Further afield' : p.borough) + (p.tour ? ' · <a href="' + esc(p.tour) + '" target="_blank" rel="noopener">3D tour</a>' : '') + '</div>' +
       '<ul class="pin-list">' + items + '</ul>' +
@@ -47,7 +90,7 @@
   }
 
   var markers = projects.map(function (p) {
-    var m = L.marker([p.lat, p.lng], { icon: pin, title: place(p), alt: place(p) });
+    var m = L.marker([p.lat, p.lng], { icon: pinFor(p.type), title: place(p) + ' (' + p.type + ')', alt: place(p) + ', ' + p.type });
     m.bindPopup(popup(p), { maxWidth: 300 });
     m._p = p;
     return m;
