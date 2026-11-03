@@ -382,12 +382,57 @@ def featured_carousel():
 </div>
 </section>'''
 
+def case_extras(f):
+    """Before and after photos, and existing vs approved drawings, for a featured project that has them."""
+    out = ""
+    pairs = f.get("pairs") or []
+    if pairs:
+        tabs = "".join(f'<button type="button" role="tab" id="ba-tab-{k}" aria-controls="ba-{k}" aria-selected="{"true" if k == 0 else "false"}"{"" if k == 0 else " tabindex=\"-1\""}>{esc(x["label"])}</button>' for k, x in enumerate(pairs))
+        panes = "".join(
+            f'<div class="ba-pair" role="tabpanel" id="ba-{k}" aria-labelledby="ba-tab-{k}"{"" if k == 0 else " hidden"}>'
+            f'<figure><img src="{esc(x["before"])}" alt="{esc(x["label"])} before the work" loading="lazy"><figcaption><span class="tag tag-before">Before</span></figcaption></figure>'
+            f'<figure><img src="{esc(x["after"])}" alt="{esc(x["label"])} after the work" loading="lazy"><figcaption><span class="tag tag-after">After</span></figcaption></figure></div>'
+            for k, x in enumerate(pairs))
+        out += (f'<div class="ba" data-tabs data-autoplay="6000"><div class="section-head ba-head"><div><span class="label">Before and after</span><h2>How it looked, and how it looks now</h2></div>'
+                f'<div class="ba-tabs" role="tablist" aria-label="Part of the house">{tabs}</div></div>{panes}</div>')
+    d = f.get("drawings")
+    if d and d.get("views"):
+        vs = d["views"]
+        tabs = "".join(f'<button type="button" role="tab" id="dw-tab-{k}" aria-controls="dw-{k}" aria-selected="{"true" if k == 0 else "false"}"{"" if k == 0 else " tabindex=\"-1\""}>{esc(x["label"])}</button>' for k, x in enumerate(vs))
+        panes = "".join(
+            f'<div class="cmp-pane" role="tabpanel" id="dw-{k}" aria-labelledby="dw-tab-{k}"{"" if k == 0 else " hidden"}>'
+            f'<div class="cmp" data-compare style="--pos:50%"><img src="{esc(x["before"])}" alt="{esc(x["label"])} elevation, {esc(d.get("before", "existing").lower())}" loading="lazy">'
+            f'<img class="cmp-after" src="{esc(x["after"])}" alt="{esc(x["label"])} elevation, {esc(d.get("after", "proposed").lower())}" loading="lazy">'
+            f'<span class="cmp-tag cmp-l">{esc(d.get("before", "Existing"))}</span><span class="cmp-tag cmp-r">{esc(d.get("after", "Proposed"))}</span>'
+            f'<span class="cmp-line" aria-hidden="true"></span>'
+            f'<input type="range" min="0" max="100" value="50" aria-label="Slide between {esc(d.get("before", "existing").lower())} and {esc(d.get("after", "proposed").lower())} {esc(x["label"].lower())} elevation"></div></div>'
+            for k, x in enumerate(vs))
+        out += (f'<div class="dw" data-tabs><div class="section-head ba-head"><div><span class="label">The drawings</span><h2>{esc(d.get("before", "Existing"))} and {esc(d.get("after", "proposed").lower())} elevations</h2>'
+                f'<p class="muted">Drag the slider across each elevation to see what changed.</p></div>'
+                f'<div class="ba-tabs" role="tablist" aria-label="Elevation">{tabs}</div></div>{panes}</div>')
+    return out
+
 def featured_page(i):
     f, p = FEATURED[i]
     nf, np_ = FEATURED[(i + 1) % len(FEATURED)]
     pf, pp = FEATURED[i - 1]
     photos = f.get("photos") or []
-    if photos:
+    caps = f.get("captions") or []
+    show = ""
+    if photos and len(photos) > 3:
+        # a full width slideshow: swipe, arrows, or it moves on by itself
+        slides = "".join(
+            f'<figure class="ss-slide" role="group" aria-roledescription="slide" aria-label="{k+1} of {len(photos)}">'
+            f'<img src="{esc(x)}" alt="{esc(caps[k] if k < len(caps) else f["title"] + ", photo " + str(k+1))}"{" loading=\"lazy\"" if k else ""}>'
+            + (f'<figcaption>{esc(caps[k])}</figcaption>' if k < len(caps) else "") + '</figure>' for k, x in enumerate(photos))
+        show = (f'<section class="ss" data-slideshow aria-roledescription="carousel" aria-label="Photos of the finished project">'
+                f'<div class="ss-track" tabindex="0">{slides}</div>'
+                '<div class="ss-bar"><button type="button" class="ss-btn" data-prev aria-label="Previous photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>'
+                f'<span class="ss-count" data-count aria-live="off">1 / {len(photos)}</span>'
+                '<button type="button" class="ss-btn" data-pause aria-label="Pause slideshow"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pause" d="M9 5v14M15 5v14"/><path class="i-play" d="M8 5l11 7-11 7z"/></svg></button>'
+                '<button type="button" class="ss-btn" data-next aria-label="Next photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div></section>')
+        gal = ""
+    elif photos:
         gal = "".join(f'<img src="{esc(x)}" alt="{esc(f["title"])}, photo {k+1}"{" loading=\"lazy\"" if k else ""}>' for k, x in enumerate(photos))
     else:
         gal = '<div class="ph"><span>Photos to come</span></div><div class="ph"><span>Photo to come</span></div><div class="ph"><span>Photo to come</span></div>'
@@ -409,7 +454,7 @@ def featured_page(i):
                  "Outbuildings and garages": "a garden room or garage conversion", "Flats and change of use": "a conversion to flats", "Porch and front": "a new porch"}.get(p["type"], "something similar")
     body = (page_head(f"Featured project · {esc(p['type'])}", esc(f["title"]), esc(f["project"])).replace('<div class="wrap stack">', '<div class="wrap stack">' + crumbs, 1)
      + f'''<section class="section"><div class="wrap case">
-<div class="case-gallery">{gal}</div>
+{show}{f'<div class="case-gallery">{gal}</div>' if gal else ""}
 <div class="case-body">
 <div class="prose">
 <h2>The project</h2>{desc}
@@ -423,11 +468,11 @@ def featured_page(i):
 <dt>Type of work</dt><dd>{esc(p["type"])}</dd>
 </dl>{"" if p.get("nomap") else f'<a class="btn btn-navy" href="projects.html#{p["id"]}">See it on the map</a>'}{tour}<a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Talk to us about yours</a></aside>
 </div>
-<div class="cta-box case-cta"><div><span class="label">Your project</span><h2>Planning {plan_word}?</h2><p>Tell us about your house and what you have in mind. We will tell you honestly what is likely to be approved.</p></div><div class="actions"><a class="btn btn-accent" href="tel:{PHONE_TEL}">Call {PHONE}</a><a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Send an enquiry</a></div></div>
+{case_extras(f)}<div class="cta-box case-cta"><div><span class="label">Your project</span><h2>Planning {plan_word}?</h2><p>Tell us about your house and what you have in mind. We will tell you honestly what is likely to be approved.</p></div><div class="actions"><a class="btn btn-accent" href="tel:{PHONE_TEL}">Call {PHONE}</a><a class="btn btn-line" href="contact.html?type={quote_plus(p["type"])}">Send an enquiry</a></div></div>
 <div><div class="section-head" style="margin-bottom:24px"><h2 style="font-size:1.5rem">More projects</h2><a class="more" href="projects.html">All projects and the map</a></div><div class="fp-grid">{more_html}</div></div>
 </div></section>''')
     return shell(feat_url(p), f'{f["title"]} | Town & Country Planning Ltd',
-                 f'{f["project"]}. {feat_status(p)}. Design, drawings and planning application by Town & Country Planning Ltd.', body)
+                 f'{f["project"]}. {feat_status(p)}. Design, drawings and planning application by Town & Country Planning Ltd.', body, scripts=("js/case.js",) if (f.get("pairs") or f.get("drawings") or len(f.get("photos") or []) > 3) else ())
 
 # ---------------- "What are you planning?" ----------------
 _H = '<path d="M8 72H112"/>'
