@@ -435,11 +435,11 @@ def case_extras(f):
             f'<div class="cmp" data-compare style="--pos:50%"><img src="{esc(x["before"])}" alt="{esc(x["label"])} elevation, {esc(d.get("before", "existing").lower())}" loading="lazy">'
             f'<img class="cmp-after" src="{esc(x["after"])}" alt="{esc(x["label"])} elevation, {esc(d.get("after", "proposed").lower())}" loading="lazy">'
             f'<span class="cmp-tag cmp-l">{esc(d.get("before", "Existing"))}</span><span class="cmp-tag cmp-r">{esc(d.get("after", "Proposed"))}</span>'
-            f'<span class="cmp-line" aria-hidden="true"></span>'
+            f'<span class="cmp-line" aria-hidden="true"></span><span class="cmp-hint" aria-hidden="true">Drag to compare</span>'
             f'<input type="range" min="0" max="100" value="50" aria-label="Slide between {esc(d.get("before", "existing").lower())} and {esc(d.get("after", "proposed").lower())} {esc(x["label"].lower())} elevation"></div></div>'
             for k, x in enumerate(vs))
         out += (f'<div class="dw" data-tabs><div class="section-head ba-head"><div><span class="label">The drawings</span><h2>{esc(d.get("before", "Existing"))} and {esc(d.get("after", "proposed").lower())} elevations</h2>'
-                f'<p class="muted">Drag the slider across each elevation to see what changed.</p></div>'
+                f'<p class="muted">Drag the blue handle left and right to see what changed.</p></div>'
                 f'<div class="ba-tabs" role="tablist" aria-label="Elevation">{tabs}</div></div>{panes}</div>')
     return out
 

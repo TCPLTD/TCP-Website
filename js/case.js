@@ -54,7 +54,9 @@
         var on = k === at;
         t.setAttribute('aria-selected', on ? 'true' : 'false');
         t.tabIndex = on ? 0 : -1;
-        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+        var pane = document.getElementById(t.getAttribute('aria-controls'));
+        pane.hidden = !on;
+        if (on) pane.dispatchEvent(new CustomEvent('paneshown'));
       });
       if (focus) tabs[at].focus();
     }
@@ -73,9 +75,37 @@
     }
   });
 
-  // Drag slider between two drawings
+  // Drag slider between two drawings. When it first comes into view it sweeps across by
+  // itself to show what changes, until the visitor grabs it.
+  var touched = false;
+  function sweep(box, range) {
+    if (still || touched || box.dataset.swept || !box.offsetParent) return;
+    box.dataset.swept = '1';
+    // 50 -> 85 -> 15 -> 50, twice, about 7 seconds in all
+    var keys = [50, 85, 15, 85, 15, 50], seg = 1150, t0 = null;
+    function set(v) { box.style.setProperty('--pos', v + '%'); range.value = Math.round(v); }
+    function frame(ts) {
+      if (touched) return;
+      if (t0 === null) t0 = ts;
+      var e = ts - t0, i = Math.floor(e / seg);
+      if (i >= keys.length - 1) { set(50); return; }
+      var f = (e % seg) / seg; f = f < .5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+      set(keys[i] + (keys[i + 1] - keys[i]) * f);
+      requestAnimationFrame(frame);
+    }
+    setTimeout(function () { requestAnimationFrame(frame); }, 400);
+  }
   document.querySelectorAll('[data-compare]').forEach(function (box) {
     var range = box.querySelector('input[type="range"]');
+    function grab() { touched = true; document.querySelectorAll('.cmp').forEach(function (b) { b.classList.add('cmp-used'); }); }
     range.addEventListener('input', function () { box.style.setProperty('--pos', range.value + '%'); });
+    ['pointerdown', 'touchstart', 'keydown', 'focus'].forEach(function (ev) { range.addEventListener(ev, grab, { passive: true }); });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es, ob) {
+        es.forEach(function (e) { if (e.isIntersecting && e.intersectionRatio > .5) sweep(box, range); });
+      }, { threshold: [0, .5, .6] }).observe(box);
+    }
+    var pane = box.closest('[role="tabpanel"]');
+    if (pane) pane.addEventListener('paneshown', function () { setTimeout(function () { sweep(box, range); }, 50); });
   });
 })();
