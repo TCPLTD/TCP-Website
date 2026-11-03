@@ -80,7 +80,7 @@
     if (!a || !a.length) return true;
     return a.indexOf('b:' + p.borough) !== -1 || a.indexOf('t:' + p.town) !== -1;
   }
-  fill(yearSel, uniq(all.map(function (p) { return p.year; })).sort(function (a, b) { return b - a; }));
+  fill(yearSel, uniq([].concat.apply([], all.map(function (p) { return [p.year].concat((p.approvals || []).map(function (a) { return a.year; })); })).filter(Boolean)).sort(function (a, b) { return b - a; }));
   fill(routeSel, uniq([].concat.apply([], all.map(routes))).sort());
 
   if (typeSel) {
@@ -300,7 +300,7 @@
   function matches(p) {
     if (state.type && p.type !== state.type) return false;
     if (!inArea(p)) return false;
-    if (state.year && String(p.year) !== state.year) return false;
+    if (state.year && String(p.year) !== state.year && !(p.approvals || []).some(function (a) { return String(a.year) === state.year; })) return false;
     if (state.route && routes(p).indexOf(state.route) === -1) return false;
     if (parsed.words.length) {
       var hay = norm([p.street, p.town, p.district, p.borough, p.year].join(' ')) + ' ' + text(p);
