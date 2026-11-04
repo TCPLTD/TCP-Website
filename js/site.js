@@ -20,4 +20,11 @@
   }
   var year = document.getElementById('year');
   if (year) year.textContent = new Date().getFullYear();
+  // Home always opens at the top of the page
+  if (!location.hash && 'scrollRestoration' in history) history.scrollRestoration = 'manual';
+  document.querySelectorAll('a[href="index.html"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      if (/(^|\/)(index\.html)?$/.test(location.pathname) && !location.hash) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    });
+  });
 })();

@@ -3,19 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Our projects | Town &amp; Country Planning Ltd</title>
-<meta name="description" content="Approved extensions, loft conversions, new homes and conversions across North London and Hertfordshire. Search by town or type of work.">
+<title>Projects and map | Town &amp; Country Planning Ltd</title>
+<meta name="description" content="Search hundreds of approved extensions, loft conversions, new homes and conversions across North London and Hertfordshire, on a map or in a list, each linked to the council&#x27;s decision.">
 <link rel="canonical" href="https://townandcountryplanningltd.co.uk/projects.html">
 <link rel="icon" href="img/logo.png">
 <meta property="og:image" content="https://townandcountryplanningltd.co.uk/img/logo.png">
-<meta property="og:title" content="Our projects | Town &amp; Country Planning Ltd">
-<meta property="og:description" content="Approved extensions, loft conversions, new homes and conversions across North London and Hertfordshire. Search by town or type of work.">
+<meta property="og:title" content="Projects and map | Town &amp; Country Planning Ltd">
+<meta property="og:description" content="Search hundreds of approved extensions, loft conversions, new homes and conversions across North London and Hertfordshire, on a map or in a list, each linked to the council&#x27;s decision.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#0F2A3C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400&amp;display=swap">
 <link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/vendor/leaflet.css">
+<link rel="stylesheet" href="css/vendor/MarkerCluster.css">
 
 </head>
 <body>
@@ -29,14 +31,12 @@
 <button class="menu-btn" type="button" aria-expanded="false" aria-controls="side-nav">Menu</button>
 <nav class="side-nav" id="side-nav" aria-label="Main">
 <a href="index.html">Home</a>
-<a href="projects.html" aria-current="page">Projects</a>
-<a href="map.html">Project map</a>
+<a href="projects.html" aria-current="page">Projects and map</a>
 <a href="services.html">Services</a>
-<a href="areas.html">Areas we cover</a>
 <a href="process.html">How we work</a>
-<a href="fees.html">Fees</a>
 <a href="reviews.html">Reviews</a>
 <a href="about.html">About us</a>
+<a href="faq.html">FAQ</a>
 <a href="contact.html">Contact</a>
 </nav>
 <div class="side-foot">
@@ -48,10 +48,36 @@
 </header>
 <div class="content">
 <main id="main">
-<section class="band page-head"><div class="wrap stack"><span class="label">Projects</span><h1>Projects we have taken through planning</h1><p class="lede">Every project here received planning approval. Search by street, town or type of work, or choose an area.</p></div></section><section class="section"><div class="wrap">
-<div class="filter-panel"><div class="filter-row"><label class="fl fl-search"><span>Search projects</span><input id="project-search" type="search" placeholder="Street, town, or e.g. loft"></label><label class="fl"><span>Type of work</span><select id="project-type"><option value="">All types of work</option></select></label><label class="fl"><span>Area</span><select id="project-area"><option value="">All areas</option></select></label><label class="fl"><span>Year</span><select id="project-year"><option value="">Any year</option></select></label><button type="button" class="btn btn-line btn-clear" id="project-clear" hidden>Clear</button></div></div><p class="result-count" id="project-count" aria-live="polite"></p>
+<section class="band page-head"><div class="wrap stack"><span class="label">Projects and map</span><h1>Projects we have taken through planning</h1><p class="lede">Every project here received planning approval. Search once and the map and the list both update. Select a pin or Show on map to see each job and its council record.</p></div></section><section class="section"><div class="wrap">
+<div class="pm-head"><p class="pm-help" hidden><button type="button" class="btn btn-line" id="pl-open" aria-expanded="false" aria-controls="planner">Not sure what to search for? Answer a few quick questions</button></p></div>
+<section class="planner" id="planner" aria-labelledby="pl-h" hidden>
+<div class="pl-head"><span class="label">What are you planning?</span><h2 id="pl-h">Find work like yours</h2><p class="muted">A few quick questions and we show you the approved projects most like yours, nearest first. Every house is different, so we talk costs through with you in person.</p></div>
+<p class="pl-progress" aria-live="polite"><span data-pl-step>Step 1</span></p>
+<fieldset class="pl-step" data-n="plan"><legend>What are you planning?</legend><div class="pl-tiles"><button type="button" class="pl-tile" data-step="plan" data-v="rear" data-label="Rear extension" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M8 72H112"/><path d="M18 72V32H62V72M14 34L40 12L66 34"/><path class="new" d="M62 72V48H100V72M62 48L100 44"/><path class="new" d="M74 72V58H90V72"/></svg><span>Rear extension</span></button><button type="button" class="pl-tile" data-step="plan" data-v="side" data-label="Side or wraparound extension" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M8 72H112"/><path d="M18 72V34H66V72M14 36L42 14L70 36"/><path class="new" d="M66 72V46H98V72M66 46L98 50"/></svg><span>Side or wraparound extension</span></button><button type="button" class="pl-tile" data-step="plan" data-v="twostorey" data-label="Two storey extension" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M8 72H112"/><path d="M18 72V34H62V72M14 36L40 14L66 36"/><path class="new" d="M62 72V34H96V72M62 53H96M62 34L96 34"/></svg><span>Two storey extension</span></button><button type="button" class="pl-tile" data-step="plan" data-v="loft" data-label="Loft conversion" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M8 72H112"/><path d="M26 72V42H94V72M20 44L60 12L100 44"/><path class="new" d="M62 22V40H88V27"/><path class="new" d="M68 28H80V36H68Z"/></svg><span>Loft conversion</span></button><button type="button" class="pl-tile" data-step="plan" data-v="garage" data-label="Garage conversion" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M8 72H112"/><path d="M14 72V34H60V72M10 36L37 14L64 36M60 72V46H104V72"/><path class="new" d="M70 52H94V64H70Z"/></svg><span>Garage conversion</span></button><button type="button" class="pl-tile" data-step="plan" data-v="garden" data-label="Garden room or outbuilding" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M8 72H112"/><path d="M24 72V54M24 54a10 10 0 1 1 0.1 0"/><path class="new" d="M52 72V42H104V72M48 42H108M66 42V72M80 42V72"/></svg><span>Garden room or outbuilding</span></button><button type="button" class="pl-tile" data-step="plan" data-v="porch" data-label="Porch or front changes" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M8 72H112"/><path d="M22 72V34H98V72M18 36L60 12L102 36M30 44H42V54H30ZM78 44H90V54H78Z"/><path class="new" d="M48 72V58H72V72M44 58L60 50L76 58"/></svg><span>Porch or front changes</span></button><button type="button" class="pl-tile" data-step="plan" data-v="layout" data-label="New layout inside" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M14 10H106V72H14Z"/><path d="M14 40H50V72M50 52V10"/><path class="new" d="M50 40H106M78 40V72"/></svg><span>New layout inside</span></button><button type="button" class="pl-tile" data-step="plan" data-v="newhome" data-label="New home or replacement house" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M8 72H112"/><path class="new" d="M36 72V38H84V72M32 40L60 16L88 40M54 72V58H66V72"/></svg><span>New home or replacement house</span></button><button type="button" class="pl-tile" data-step="plan" data-v="flats" data-label="Flats or change of use" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M8 72H112"/><path d="M30 72V14H90V72"/><path class="new" d="M30 33H90M30 52H90M60 14V72"/><path d="M40 22H50V28H40ZM70 22H80V28H70ZM40 41H50V47H40ZM70 41H80V47H70Z"/></svg><span>Flats or change of use</span></button><button type="button" class="pl-tile" data-step="plan" data-v="unsure" data-label="Not sure yet" data-not=""><svg viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path d="M8 72H112"/><path d="M36 72V38H84V72M32 40L60 16L88 40"/><path class="new" d="M54 50a6 6 0 1 1 8 6v4M58 66v1"/></svg><span>Not sure yet</span></button></div></fieldset>
+<fieldset class="pl-step" data-n="details" hidden><legend>Anything in particular? <span class="pl-sub">Choose any that apply. We will put the closest examples first.</span></legend>
+<div class="opts pl-details" data-pl-details></div>
+<div class="pl-where"><button type="button" class="btn btn-accent" data-pl-next>Next</button></div></fieldset>
+<fieldset class="pl-step" data-n="where" hidden><legend>Where is the property?</legend>
+<div class="pl-where"><label class="fl fl-search"><span>Town or postcode</span><input id="pl-place" type="text" autocomplete="postal-code" placeholder="e.g. Potters Bar or EN4"></label>
+<button type="button" class="btn btn-accent" data-pl-where>Show projects</button><button type="button" class="pl-back" data-pl-skip>Skip this</button></div>
+<p class="pl-hint" data-pl-hint aria-live="polite"></p></fieldset>
+<div class="pl-result" hidden tabindex="-1">
+<h3 data-pl-summary></h3>
+<p data-pl-count class="lede"></p>
+<div class="actions"><button type="button" class="btn btn-accent" data-pl-show>Show me these projects</button><a class="btn btn-navy" data-pl-enquire href="contact.html">Talk it through with us</a><a class="btn btn-line" href="tel:07843561129">Call 07843 561129</a></div>
+</div>
+<div class="pl-nav"><button type="button" class="pl-back" data-pl-back hidden>Back</button><button type="button" class="pl-back" data-pl-restart hidden>Start again</button></div>
+<script type="application/json" id="pl-plans">{"rear": {"label": "Rear extension", "type": "", "q": "rear extension"}, "side": {"label": "Side or wraparound extension", "type": "", "q": "side extension"}, "twostorey": {"label": "Two storey extension", "type": "", "q": "two storey"}, "loft": {"label": "Loft conversion", "type": "", "q": "loft"}, "garage": {"label": "Garage conversion", "type": "", "q": "garage conversion"}, "garden": {"label": "Garden room or outbuilding", "type": "Outbuildings and garages", "q": ""}, "porch": {"label": "Porch or front changes", "type": "", "q": "porch"}, "layout": {"label": "New layout inside", "type": "", "q": "internal"}, "newhome": {"label": "New home or replacement house", "type": "New homes", "q": ""}, "flats": {"label": "Flats or change of use", "type": "Flats and change of use", "q": ""}, "unsure": {"label": "Not sure yet", "type": "", "q": ""}}</script>
+</section>
+<div class="filter-panel"><div class="filter-row"><label class="fl fl-search"><span>Search projects</span><input id="project-search" type="search" placeholder="Street, town, or e.g. loft"></label><label class="fl"><span>Type of work</span><select id="project-type"><option value="">All types of work</option></select></label><div class="fl fl-area"><span id="area-lbl">Areas</span><div class="ms" id="project-area"><button type="button" class="ms-btn" aria-expanded="false" aria-controls="area-panel" aria-labelledby="area-lbl area-val"><span id="area-val">All areas</span></button><div class="ms-panel" id="area-panel" hidden><p class="ms-hint">Tick as many as you like</p><input type="search" class="ms-find" placeholder="Find a town or council" aria-label="Find a town or council"><fieldset><legend>Councils</legend><div class="ms-list" data-group="b"></div></fieldset><fieldset><legend>Towns</legend><div class="ms-list" data-group="t"></div></fieldset><div class="ms-foot"><button type="button" class="btn btn-line" data-ms-clear>Clear areas</button><button type="button" class="btn btn-navy" data-ms-done>Done</button></div></div></div></div><label class="fl"><span>Year</span><select id="project-year"><option value="">Any year</option></select></label><button type="button" class="btn btn-line btn-clear" id="project-clear" hidden>Clear</button></div></div><p class="result-count" id="project-count" aria-live="polite"></p>
+<div class="map-wrap pm-map"><div id="map" role="region" aria-label="Map of the projects listed below"></div></div>
+<p class="muted pm-note">Numbers on the map show several projects close together: select one to zoom in.</p>
 <div class="grid" id="project-list"></div>
 <div class="load-more"><button type="button" class="btn btn-line" id="project-more" hidden>Show more projects</button></div>
+</div></section>
+<section class="section band"><div class="wrap fp-prompt">
+<div class="stack"><span class="label">Featured projects</span><h2>Want to see what our projects look like?</h2><p class="muted">Before photos, the approved drawings and the story behind some of our projects.</p></div>
+<a class="btn btn-accent" href="index.html#featured">See featured projects</a>
 </div></section><section class="closing section"><div class="wrap">
 <div class="stack"><span class="label">Next step</span><h2>Tell us what you are thinking of doing.</h2><p>A short conversation is the best place to start. We will talk through your property, what is likely to be possible and how we would approach it.</p></div>
 <div class="actions"><a class="btn btn-accent" href="tel:07843561129">Call 07843 561129</a><a class="btn btn-ghost" href="contact.html">Send an enquiry</a></div>
@@ -60,7 +86,7 @@
 <footer class="site-footer">
 <div class="wrap">
 <div><h3>Town &amp; Country Planning Ltd</h3><ul><li>Planning and design consultants</li><li>Cockfosters, Barnet EN4</li><li>[Company number]</li></ul></div>
-<div><h3>Explore</h3><ul><li><a href="projects.html">Projects</a></li><li><a href="map.html">Project map</a></li><li><a href="services.html">Services</a></li><li><a href="fees.html">Fees</a></li><li><a href="reviews.html">Reviews</a></li></ul></div>
+<div><h3>Explore</h3><ul><li><a href="projects.html">Projects and map</a></li><li><a href="areas.html">Areas we cover</a></li><li><a href="services.html">Services</a></li><li><a href="fees.html">Fees</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
 <div><h3>Areas</h3><ul><li><a href="area-barnet.html">Barnet</a></li><li><a href="area-hertsmere.html">Hertsmere</a></li><li><a href="area-enfield.html">Enfield</a></li><li><a href="area-welwyn-hatfield.html">Welwyn Hatfield</a></li><li><a href="area-haringey.html">Haringey</a></li><li><a href="area-watford.html">Watford</a></li><li><a href="areas.html">All areas</a></li></ul></div>
 <div><h3>Contact</h3><ul><li><a href="tel:07843561129">07843 561129</a></li><li><a href="mailto:martin@tcpltd.net">martin@tcpltd.net</a></li><li>© <span id="year">2026</span> Town &amp; Country Planning Ltd</li></ul></div>
 </div>
@@ -69,6 +95,12 @@
 </div>
 <script src="js/site.js"></script>
 <script src="data/projects.js"></script>
+<script src="data/featured.js"></script>
 <script src="js/projects.js"></script>
+<script src="js/planner.js"></script>
+<script src="js/suggest.js"></script>
+<script src="js/vendor/leaflet.js"></script>
+<script src="js/vendor/leaflet.markercluster.js"></script>
+<script src="js/map.js"></script>
 </body>
 </html>

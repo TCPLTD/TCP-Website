@@ -4,6 +4,20 @@
   var form = document.getElementById('enquiry');
   if (!form) return;
   var status = document.getElementById('f-status');
+  // arriving from "Talk it through with us": fill in what the visitor has already told us
+  try {
+    var params = new URLSearchParams(location.search);
+    var t = params.get('type');
+    if (t) {
+      var sel = form.elements.type, low = t.toLowerCase();
+      for (var i = 0; i < sel.options.length; i++) {
+        var o = sel.options[i].text.toLowerCase();
+        if (o && (o === low || (low.indexOf('loft') !== -1 && o === 'loft conversion') || (low.indexOf('garage') !== -1 && o === 'garage conversion') || (low.indexOf('new home') !== -1 && o === 'new home') || (low.indexOf('garden') !== -1 && o.indexOf('garden') === 0))) { sel.selectedIndex = i; break; }
+      }
+    }
+    if (params.get('about')) form.elements.message.value = params.get('about') + '\n\n';
+    if (params.get('area')) form.elements.area.value = params.get('area');
+  } catch (e) {}
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var name = form.elements.name.value.trim();
