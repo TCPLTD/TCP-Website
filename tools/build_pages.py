@@ -653,7 +653,11 @@ pages["index.html"] = shell("index.html",
 <div><strong>One team, start to finish</strong><span>Survey, design, planning, building control</span></div>
 <div><strong>Built on recommendation</strong><span>Clients return and refer their friends</span></div>
 </div></section>
-<section class="section"><div class="wrap">
+<section class="section" id="featured"><div class="wrap">
+<div class="section-head"><div class="stack"><span class="label">Our work</span><h2>Featured projects</h2></div><a class="more" href="projects.html">Search all projects on the map</a></div>
+''' + featured_carousel() + '''
+</div></section>
+<section class="section band"><div class="wrap">
 <div class="section-head"><div class="stack"><span class="label">What are you planning?</span><h2>From a rear extension to a new home</h2></div><a class="more" href="projects.html#planner">Not sure? Find work like yours</a></div>
 ''' + service_tiles() + '''
 </div></section>
@@ -671,10 +675,6 @@ pages["index.html"] = shell("index.html",
 <section class="section band" id="reviews"><div class="wrap">
 <div class="section-head"><div class="stack"><span class="label">Client reviews</span><h2>What our clients say</h2></div><a class="more" href="reviews.html">All reviews</a></div>
 ''' + reviews_carousel() + '''
-</div></section>
-<section class="section" id="featured"><div class="wrap">
-<div class="section-head"><div class="stack"><span class="label">Our work</span><h2>Featured projects</h2></div><a class="more" href="projects.html">Search all projects on the map</a></div>
-''' + featured_carousel() + '''
 </div></section>
 <section class="section"><div class="wrap" style="max-width:900px">
 <div class="section-head"><div class="stack"><span class="label">Questions</span><h2>Frequently asked questions</h2></div><a class="more" href="faq.html">All questions</a></div>
