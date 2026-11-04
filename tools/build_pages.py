@@ -367,6 +367,7 @@ def feat_years(p):
 def feat_status(p): return p.get("status") or f"Approved {feat_years(p)}"
 def feat_photo(f, cap="Photo to come"):
     if f.get("photos"): return f'<img src="{esc(f["photos"][0])}" alt="{esc(f["title"])}" loading="lazy">'
+    if f.get("before"): return f'<img src="{esc(f["before"][0]["src"])}" alt="{esc(f["title"])}, before the work" loading="lazy">'
     return f'<div class="ph"><span>{cap}</span></div>'
 
 def featured_card(f, p, i, total):
@@ -656,10 +657,6 @@ pages["index.html"] = shell("index.html",
 <div class="section-head"><div class="stack"><span class="label">What are you planning?</span><h2>From a rear extension to a new home</h2></div><a class="more" href="projects.html#planner">Not sure? Find work like yours</a></div>
 ''' + service_tiles() + '''
 </div></section>
-<section class="section band"><div class="wrap">
-<div class="section-head"><div class="stack"><span class="label">Our work</span><h2>Featured projects</h2></div><a class="more" href="projects.html">Search all projects on the map</a></div>
-''' + featured_carousel() + '''
-</div></section>
 <section class="section"><div class="wrap why">
 <div class="stack" style="gap:20px"><span class="label">Why us</span><h2>Good design, and the planning knowledge to get it approved.</h2>
 <p class="lede">We design something that works for you and suits your house, your street and the council's policies. Then the same small team handles the application, so you always know who you are talking to and where it stands.</p>
@@ -674,6 +671,10 @@ pages["index.html"] = shell("index.html",
 <section class="section band" id="reviews"><div class="wrap">
 <div class="section-head"><div class="stack"><span class="label">Client reviews</span><h2>What our clients say</h2></div><a class="more" href="reviews.html">All reviews</a></div>
 ''' + reviews_carousel() + '''
+</div></section>
+<section class="section" id="featured"><div class="wrap">
+<div class="section-head"><div class="stack"><span class="label">Our work</span><h2>Featured projects</h2></div><a class="more" href="projects.html">Search all projects on the map</a></div>
+''' + featured_carousel() + '''
 </div></section>
 <section class="section"><div class="wrap" style="max-width:900px">
 <div class="section-head"><div class="stack"><span class="label">Questions</span><h2>Frequently asked questions</h2></div><a class="more" href="faq.html">All questions</a></div>
@@ -695,11 +696,11 @@ pages["projects.html"] = shell("projects.html", "Projects and map | Town & Count
 <div class="grid" id="project-list"></div>
 <div class="load-more"><button type="button" class="btn btn-line" id="project-more" hidden>Show more projects</button></div>
 </div></section>
-<section class="section band"><div class="wrap">
-<div class="section-head"><div class="stack"><span class="label">Featured projects</span><h2>A closer look</h2><p class="muted">Photos, the planning decision and the story behind some of our projects.</p></div></div>
-{featured_carousel()}
+<section class="section band"><div class="wrap fp-prompt">
+<div class="stack"><span class="label">Featured projects</span><h2>Want to see what our projects look like?</h2><p class="muted">Before photos, the approved drawings and the story behind some of our projects.</p></div>
+<a class="btn btn-accent" href="index.html#featured">See featured projects</a>
 </div></section>''' + CLOSING, extra_head=LEAFLET,
- scripts=("data/projects.js", "data/featured.js", "js/projects.js", "js/planner.js", "js/suggest.js") + MAPJS + ("js/carousel.js",))
+ scripts=("data/projects.js", "data/featured.js", "js/projects.js", "js/planner.js", "js/suggest.js") + MAPJS)
 
 # ---------------- Services ----------------
 SV = [("extensions", "Extensions", "An extension is the most common way to gain space without moving. We design single and two storey rear extensions, side returns, wraparounds and over-garage extensions that suit the house and stand a strong chance of approval. Many single storey extensions can be built under permitted development; we check that first, because it can save you time and fees.",
