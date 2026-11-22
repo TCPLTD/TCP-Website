@@ -462,14 +462,20 @@ def featured_page(i):
     show = ""
     if photos and len(photos) > 3:
         # a full width slideshow: swipe, arrows, or it moves on by itself
-        slides = "".join(
-            f'<figure class="ss-slide" role="group" aria-roledescription="slide" aria-label="{k+1} of {len(photos)}">'
-            f'<img src="{esc(x)}" alt="{esc(f["title"] + ": " + caps[k] if k < len(caps) else f["title"] + ", photo " + str(k+1))}"{" loading=\"lazy\"" if k else ""}>'
+        vid = f.get("video")   # optional short tour, shown first; the slideshow waits for it to finish
+        n = len(photos) + (1 if vid else 0)
+        slides = (f'<figure class="ss-slide ss-video" role="group" aria-roledescription="slide" aria-label="1 of {n}: video tour">'
+                  f'<video src="{esc(vid["src"])}" poster="{esc(vid["poster"])}" muted playsinline preload="metadata" aria-label="{esc(f["title"])}: video tour"></video>'
+                  f'<figcaption>{esc(vid.get("caption", "Video tour"))}</figcaption></figure>') if vid else ""
+        off = 1 if vid else 0
+        slides += "".join(
+            f'<figure class="ss-slide" role="group" aria-roledescription="slide" aria-label="{k+1+off} of {n}">'
+            f'<img src="{esc(x)}" alt="{esc(f["title"] + ": " + caps[k] if k < len(caps) else f["title"] + ", photo " + str(k+1))}"{" loading=\"lazy\"" if k or vid else ""}>'
             + (f'<figcaption>{esc(caps[k])}</figcaption>' if k < len(caps) else "") + '</figure>' for k, x in enumerate(photos))
         show = (f'<section class="ss" data-slideshow aria-roledescription="carousel" aria-label="Photos of the finished project">'
                 f'<div class="ss-track" tabindex="0">{slides}</div>'
                 '<div class="ss-bar"><button type="button" class="ss-btn" data-prev aria-label="Previous photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>'
-                f'<span class="ss-count" data-count aria-live="off">1 / {len(photos)}</span>'
+                f'<span class="ss-count" data-count aria-live="off">1 / {n}</span>'
                 '<button type="button" class="ss-btn" data-pause aria-label="Pause slideshow"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pause" d="M9 5v14M15 5v14"/><path class="i-play" d="M8 5l11 7-11 7z"/></svg></button>'
                 '<button type="button" class="ss-btn" data-next aria-label="Next photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div></section>')
         gal = ""
