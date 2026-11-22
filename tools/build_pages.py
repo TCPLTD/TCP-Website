@@ -463,7 +463,8 @@ def featured_page(i):
     if photos and len(photos) > 3:
         # a full width slideshow: swipe, arrows, or it moves on by itself
         slides = "".join(
-            f'<figure class="ss-slide" role="group" aria-roledescription="slide" aria-label="{k+1} of {len(photos)}">'
+            # portrait photos are shown whole (ss-tall) rather than cropped to the frame
+            f'<figure class="ss-slide{" ss-tall" if img_size(x)[1] > img_size(x)[0] * 0.8 else ""}" role="group" aria-roledescription="slide" aria-label="{k+1} of {len(photos)}">'
             f'<img src="{esc(x)}" alt="{esc(f["title"] + ": " + caps[k] if k < len(caps) else f["title"] + ", photo " + str(k+1))}"{" loading=\"lazy\"" if k else ""}>'
             + (f'<figcaption>{esc(caps[k])}</figcaption>' if k < len(caps) else "") + '</figure>' for k, x in enumerate(photos))
         show = (f'<section class="ss" data-slideshow aria-roledescription="carousel" aria-label="Photos of the finished project">'
