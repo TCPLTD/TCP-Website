@@ -153,7 +153,7 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 </main>
 <footer class="site-footer">
 <div class="wrap">
-<div><h3>Town &amp; Country Planning Ltd</h3><ul><li>Planning and design consultants</li><li>Registered in England and Wales, company number 05448742</li><li>Registered office: 13 Evelyn Road, Cockfosters, Barnet EN4 9JT</li></ul></div>
+<div><h3>Town &amp; Country Planning Ltd</h3><ul><li>Planning and design consultants</li><li>Registered in England and Wales, company number 05448742</li></ul></div>
 <div><h3>Explore</h3><ul><li><a href="projects.html">Projects and map</a></li><li><a href="areas.html">Areas we cover</a></li><li><a href="services.html">Services</a></li><li><a href="fees.html">Fees</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
 <div><h3>Areas</h3><ul>{footer_areas}<li><a href="areas.html">All areas</a></li></ul></div>
 <div><h3>Contact</h3><ul><li><a href="tel:{PHONE_TEL}">{PHONE}</a></li><li><a href="mailto:{EMAIL}">{EMAIL}</a></li><li>© <span id="year">2026</span> Town &amp; Country Planning Ltd</li></ul></div>
