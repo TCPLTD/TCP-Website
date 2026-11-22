@@ -366,8 +366,8 @@ def feat_years(p):
     return (str(ys[0]) if len(ys) == 1 else f"{ys[0]}–{ys[-1]}") if ys else str(p.get("year", ""))
 def feat_status(p): return p.get("status") or f"Approved {feat_years(p)}"
 def feat_photo(f, cap="Photo to come"):
-    if f.get("photos"): return f'<img src="{esc(f["photos"][0])}" alt="{esc(f["title"])}" loading="lazy">'
-    if f.get("before"): return f'<img src="{esc(f["before"][0]["src"])}" alt="{esc(f["title"])}, before the work" loading="lazy">'
+    # Cards show finished photos only; until we have them, a "photo to come" panel.
+    if f.get("photos"): return f'<img src="{esc(f.get("card") or f["photos"][0])}" alt="{esc(f["title"])}" loading="lazy">'
     return f'<div class="ph"><span>{cap}</span></div>'
 
 def featured_card(f, p, i, total):
