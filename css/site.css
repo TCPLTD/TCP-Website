@@ -576,8 +576,6 @@ form.enquiry .btn { margin-top: 10px; }
 .ss-track::-webkit-scrollbar { display: none; }
 .ss-slide { flex: 0 0 100%; margin: 0; scroll-snap-align: start; position: relative; }
 .ss-slide img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
-.ss-tall { background: #0F1A22; }
-.ss-tall img { object-fit: contain; }
 .ss-slide figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 48px 20px 64px; color: #fff; font-size: 1.05rem; background: linear-gradient(transparent, rgba(5, 15, 25, .72)); }
 .ss-bar { position: absolute; right: 16px; bottom: 14px; display: flex; align-items: center; gap: 8px; }
 .ss-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .92); color: #173B53; display: grid; place-items: center; cursor: pointer; }
