@@ -153,7 +153,7 @@ def shell(fname, title, desc, body, extra_head="", scripts=(), canonical=None):
 </main>
 <footer class="site-footer">
 <div class="wrap">
-<div><h3>Town &amp; Country Planning Ltd</h3><ul><li>Planning and design consultants</li><li>Registered in England and Wales, company number 05448742</li></ul></div>
+<div><h3>Town &amp; Country Planning Ltd</h3><ul><li>Planning and design consultants</li><li>Registered in England and Wales, company number 05448742</li><li><a href="privacy.html">Privacy notice</a></li></ul></div>
 <div><h3>Explore</h3><ul><li><a href="projects.html">Projects and map</a></li><li><a href="areas.html">Areas we cover</a></li><li><a href="services.html">Services</a></li><li><a href="fees.html">Fees</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
 <div><h3>Areas</h3><ul>{footer_areas}<li><a href="areas.html">All areas</a></li></ul></div>
 <div><h3>Contact</h3><ul><li><a href="tel:{PHONE_TEL}">{PHONE}</a></li><li><a href="mailto:{EMAIL}">{EMAIL}</a></li><li>© <span id="year">2026</span> Town &amp; Country Planning Ltd</li></ul></div>
@@ -186,9 +186,22 @@ SERVICES = [("extensions", "Extensions", "Rear, side return, wraparound and two 
             ("conversions", "Conversions and change of use", "Garage, basement and house to flat conversions, and commercial to residential.", "conversion"),
             ("outbuildings", "Garden rooms and outbuildings", "Garden offices, studios, annexes and pool houses, often without a full application.", "garden room"),
             ("consultancy", "Planning advice and appeals", "Pre-application advice, permitted development checks, planning statements and appeals.", "planning advice")]
+# Picture for each service in img/services/: (file, is it a drawing, description for screen readers).
+# Photos fill the frame; drawings sit whole on white.
+SVC_IMG = {"extensions": ("extensions.jpg", False, "Finished rear extension at a house in Hadley Wood"),
+           "lofts": ("lofts.jpg", False, "Bedroom in a finished loft conversion in Cockfosters"),
+           "new-build": ("new-build.jpg", True, "Approved front elevation of a new family house in Totteridge"),
+           "conversions": ("conversions.jpg", True, "Approved front elevation of a house in Barnet with a garage conversion"),
+           "outbuildings": ("outbuildings.svg", True, "Drawing of a garden room"),
+           "consultancy": ("consultancy.jpg", True, "Rear elevation of a scheme in Croxley Green approved on appeal"),
+           "building-control": ("building-control.jpg", True, "Side elevation drawing for a loft conversion in Bushey")}
+def svc_img(a, alt=True):
+    f, drawing, text = SVC_IMG[a]
+    return (f'<figure class="svc-img{" is-drawing" if drawing else ""}"><img src="img/services/{f}" '
+            f'alt="{esc(text) if alt else ""}" loading="lazy"></figure>')
 def service_tiles():
     return '<div class="tiles">' + "".join(
-        f'<a class="tile" href="services.html#{a}"><div class="ph"><span>Photo: {p}</span></div><div class="tile-body"><h3>{t}</h3><p>{d}</p><span class="go">Find out more</span></div></a>'
+        f'<a class="tile" href="services.html#{a}">{svc_img(a, alt=False)}<div class="tile-body"><h3>{t}</h3><p>{d}</p><span class="go">Find out more</span></div></a>'
         for a, t, d, p in SERVICES) + '</div>'
 
 Q = [("Following on from a recommendation from a friend and various talks with other architects we decided to instruct Martin to be the architect for our project, which was a single storey L-shape extension and loft conversion. Both myself and my wife had not done this before so it was reassuring Martin was there to listen and make our ideas and dreams into reality, and he closely worked with our builder at all times. I have already recommended Martin and will continue to do so.", "Mr & Mrs B. Jacobs", "Borehamwood"),
@@ -267,11 +280,11 @@ HERO_ART = '''<svg viewBox="0 0 480 360" role="img" aria-label="Line drawing of 
 # Homepage slideshow behind the hero. Put photos in img/hero/ and set the file name;
 # None shows a placeholder with the caption until the photo is added.
 HERO_SLIDES = [
-    (None, "Photo to come: finished rear extension"),
-    (None, "Photo to come: loft conversion"),
-    (None, "Photo to come: new home"),
-    (None, "Photo to come: kitchen inside an extension"),
-    (None, "Photo to come: garden room"),
+    ("hero-1.jpg", "Rear extensions in Hadley Wood"),
+    ("hero-2.jpg", "Kitchen in a remodelled house in Hadley Wood"),
+    ("hero-3.jpg", "Rear extension and loft in Cockfosters"),
+    ("hero-4.jpg", "Open plan living in a rear extension, Cockfosters"),
+    ("hero-5.jpg", "Kitchen with a garden view, Hadley Wood"),
 ]
 
 def hero_slides():
@@ -365,6 +378,9 @@ def feat_years(p):
     ys = sorted({a["year"] for a in p.get("approvals", []) if a.get("year")})
     return (str(ys[0]) if len(ys) == 1 else f"{ys[0]}–{ys[-1]}") if ys else str(p.get("year", ""))
 def feat_status(p): return p.get("status") or f"Approved {feat_years(p)}"
+def card_label(p):
+    s = feat_status(p)
+    return s if s.startswith(p["type"]) else f'{p["type"]} · {s}'
 def video_tour(f):
     # The video tour sits under the photos as a small button; it plays in a pop-up player only when asked for.
     v = f.get("video")
@@ -384,7 +400,7 @@ def feat_photo(f, cap="Photo to come"):
 def featured_card(f, p, i, total):
     return (f'<article class="fp-card" role="group" aria-roledescription="slide" aria-label="{i+1} of {total}: {esc(f["title"])}">'
             f'<a class="fp-photo" href="{feat_url(p)}" tabindex="-1" aria-hidden="true">{feat_photo(f)}</a>'
-            f'<div class="fp-body"><span class="card-type">{esc(p["type"])} · {esc(feat_status(p))}</span>'
+            f'<div class="fp-body"><span class="card-type">{esc(card_label(p))}</span>'
             f'<h3><a href="{feat_url(p)}">{esc(f["title"])}</a></h3><p>{esc(f["project"])}</p>'
             f'<a class="more" href="{feat_url(p)}" aria-label="View project: {esc(f["title"])}">View project</a></div></article>')
 
@@ -734,7 +750,7 @@ SVQ = {"extensions": "q=extension", "lofts": "q=loft", "new-build": "type=New+ho
        "outbuildings": "type=Outbuildings+and+garages", "consultancy": "", "building-control": ""}
 sv_html = "".join(f'''<section class="section{" band" if i % 2 else ""}" id="{a}"><div class="wrap split" style="align-items:center">
 <div class="prose"><span class="label">{i+1:02d}</span><h2>{t}</h2><p>{d}</p><div><h3 style="font-size:1rem;margin:8px 0">Includes</h3><ul class="list-cols">{"".join(f"<li>{x}</li>" for x in L)}</ul></div><p><a class="more" href="projects.html?{SVQ[a]}#project-list">See examples</a></p></div>
-<div class="ph" style="aspect-ratio:4/3"><span>Photo: {t.lower()}</span></div>
+{svc_img(a)}
 </div></section>''' for i, (a, t, d, L) in enumerate(SV))
 pages["services.html"] = shell("services.html", "Services | Town & Country Planning Ltd",
  "Extensions, loft conversions, new homes, conversions, garden rooms, planning advice, appeals and building control drawings in North London and Hertfordshire.",
@@ -843,7 +859,7 @@ pages["about.html"] = shell("about.html", "About us | Town & Country Planning Lt
 <p>We combine design with a detailed knowledge of local planning policy. That means proposals that suit the house and the street, and applications that are complete and clear when they reach the planning officer.</p>
 <p>We stay involved after approval, preparing building control drawings and recommending builders and structural engineers we trust.</p>
 </div>
-<div class="ph" style="aspect-ratio:4/3"><span>Photo: the team or the office</span></div>
+<figure class="svc-img"><img src="img/projects/p012/rear-terrace-after.jpg" alt="Rear extensions and terrace at a remodelled house in Hadley Wood" loading="lazy"></figure>
 </div></section>
 <section class="section press" id="press" aria-labelledby="press-h"><div class="wrap press-wrap">
 <figure class="press-cover"><img src="img/press/essential-kitchen-jan-2017.jpg" alt="Cover of Essential Kitchen Bathroom Bedroom magazine, January 2017" width="490" height="650" loading="lazy"></figure>
@@ -853,11 +869,10 @@ pages["about.html"] = shell("about.html", "About us | Town & Country Planning Lt
 <section class="section band"><div class="wrap">
 <div class="section-head"><div class="stack"><span class="label">The team</span><h2>Who you will work with</h2></div></div>
 <div class="team">
-<div><div class="ph"><span>Photo</span></div><strong>Martin McGahon</strong><small>Founder</small></div>
-<div><div class="ph"><span>Photo</span></div><strong>[Name]</strong><small>[Role]</small></div>
-<div><div class="ph"><span>Photo</span></div><strong>[Name]</strong><small>[Role]</small></div>
-<div><div class="ph"><span>Photo</span></div><strong>[Name]</strong><small>[Role]</small></div>
+<div><div class="ph"><span>Photo to come</span></div><strong>Martin McGahon</strong><small>Founder</small></div>
 </div>
+<!-- Add the rest of the team here when their names, roles and photos are ready -->
+<p style="margin-top:24px;max-width:640px">You will work with Martin and our small design team: the same people from the first visit to the final drawing.</p>
 </div></section>
 <section class="section"><div class="wrap">
 <div class="section-head"><div class="stack"><span class="label">How we work</span><h2>What you can expect</h2></div></div>
@@ -892,7 +907,7 @@ pages["contact.html"] = shell("contact.html", "Contact us | Town & Country Plann
 <select id="f-type" name="type"><option value="">Please choose</option><option>Single storey extension</option><option>Two storey extension</option><option>Loft conversion</option><option>Garage conversion</option><option>New home</option><option>Garden room or outbuilding</option><option>Planning advice</option><option>Building control drawings</option><option>Other or not sure</option></select>
 <label for="f-msg">Tell us about your project</label><textarea id="f-msg" name="message" rows="4"></textarea>
 <button class="btn btn-accent" type="submit">Send enquiry</button>
-<p class="form-msg" id="f-status" aria-live="polite">We will never share your details.</p>
+<p class="form-msg" id="f-status" aria-live="polite">We only use your details to reply to you. See our <a href="privacy.html">privacy notice</a>.</p>
 </form>
 </div></section>''', scripts=("js/contact.js",))
 
@@ -901,6 +916,34 @@ for _i in range(len(FEATURED)):
 
 pages["404.html"] = shell("404.html", "Page not found | Town & Country Planning Ltd", "Page not found.",
  '<section class="section"><div class="wrap stack"><span class="label">404</span><h1>Page not found</h1><p class="lede">That page has moved or no longer exists.</p><div class="actions"><a class="btn btn-navy" href="index.html">Go to the homepage</a><a class="btn btn-line" href="projects.html">Browse projects</a></div></div></section>')
+
+PRIVACY = '''<section class="section"><div class="wrap prose" style="max-width:760px">
+<h2>Who we are</h2>
+<p>Town &amp; Country Planning Ltd is a planning and design practice registered in England and Wales, company number 05448742. We are responsible for the personal information you give us. If you have any questions about it, call <a href="tel:{PHONE_TEL}">{PHONE}</a> or email <a href="mailto:{EMAIL}">{EMAIL}</a>.</p>
+<h2>What we collect</h2>
+<p>When you call, email or send an enquiry, we keep your name, your contact details, the address or area of the property and what you tell us about your project. If you become a client, we also hold the information we need to do the work, such as survey measurements, photographs and existing plans of the property.</p>
+<h2>How we use it</h2>
+<ul>
+<li>To reply to your enquiry, arrange a visit and give you a quote.</li>
+<li>To design your project and prepare and manage planning and building control applications.</li>
+<li>To keep the business and tax records the law requires.</li>
+</ul>
+<p>We use your information because you have asked us to, to provide the service we have agreed with you, and to meet our legal obligations. We do not use it for marketing lists and we never sell it.</p>
+<h2>Who we share it with</h2>
+<p>Only those who need it for your project: the council's planning and building control teams, and, with your agreement, structural engineers or other consultants working on it. Councils publish planning applications on their websites, including the address and the drawings. That is part of the planning process and is controlled by the council.</p>
+<h2>Projects shown on this website</h2>
+<p>The projects on our map and project pages are approved planning applications, which are public records. We show the street and town only, never a house number or a client's name. Photographs are used with the owner's permission. If you would like a project removed, contact us and we will take it down.</p>
+<h2>This website</h2>
+<p>This website does not use advertising or tracking cookies, and we do not use analytics. To show the site and the map, your browser loads fonts from Google Fonts and map images from OpenStreetMap, and a place search on the map is looked up with postcodes.io and OpenStreetMap. As with any website, these services see your device's internet address when they send the files.</p>
+<h2>How long we keep it</h2>
+<p>We keep enquiries that do not go ahead for up to two years. We keep project records for as long as we may need them for legal and insurance reasons, usually up to 15 years after the work.</p>
+<h2>Your rights</h2>
+<p>You can ask to see the information we hold about you, ask us to correct it or delete it, or object to how we use it. Contact us using the details above. If you are not happy with our answer, you can complain to the Information Commissioner's Office at <a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener">ico.org.uk</a>.</p>
+<p><small>Last updated November 2026.</small></p>
+</div></section>'''.replace("{PHONE_TEL}", PHONE_TEL).replace("{PHONE}", PHONE).replace("{EMAIL}", EMAIL)
+pages["privacy.html"] = shell("privacy.html", "Privacy notice | Town & Country Planning Ltd",
+ "How Town & Country Planning Ltd uses the personal information you give us, and your rights.",
+ page_head("Privacy", "Privacy notice", "How we use the information you give us, who we share it with and your rights.") + PRIVACY)
 
 for name, doc in pages.items():
     open(os.path.join(OUT, name), "w").write(doc)
