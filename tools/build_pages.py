@@ -365,6 +365,17 @@ def feat_years(p):
     ys = sorted({a["year"] for a in p.get("approvals", []) if a.get("year")})
     return (str(ys[0]) if len(ys) == 1 else f"{ys[0]}–{ys[-1]}") if ys else str(p.get("year", ""))
 def feat_status(p): return p.get("status") or f"Approved {feat_years(p)}"
+def video_tour(f):
+    # The video tour sits under the photos as a small button; it plays in a pop-up player only when asked for.
+    v = f.get("video")
+    if not v: return ""
+    secs = f' · {v["seconds"]} seconds' if v.get("seconds") else ""
+    return (f'<div class="tour"><button type="button" class="tour-btn" data-tour aria-haspopup="dialog">'
+            f'<span class="tour-thumb"><img src="{esc(v["poster"])}" alt="" loading="lazy"><span class="tour-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></span></span>'
+            f'<span class="tour-text"><strong>Watch the video tour</strong><span>{esc(v.get("caption") or "A walk through the finished house")}{secs}</span></span></button>'
+            f'<dialog class="tour-dlg" aria-label="{esc(f["title"])}: video tour"><button type="button" class="tour-close" data-tour-close aria-label="Close the video">'
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+            f'<video src="{esc(v["src"])}" poster="{esc(v["poster"])}" controls muted playsinline preload="none"></video></dialog></div>')
 def feat_photo(f, cap="Photo to come"):
     # Cards show finished photos only; until we have them, a "photo to come" panel.
     if f.get("photos"): return f'<img src="{esc(f.get("card") or f["photos"][0])}" alt="{esc(f["title"])}" loading="lazy">'
@@ -462,15 +473,10 @@ def featured_page(i):
     show = ""
     if photos and len(photos) > 3:
         # a full width slideshow: swipe, arrows, or it moves on by itself
-        vid = f.get("video")   # optional short tour, shown first; the slideshow waits for it to finish
-        n = len(photos) + (1 if vid else 0)
-        slides = (f'<figure class="ss-slide ss-video" role="group" aria-roledescription="slide" aria-label="1 of {n}: video tour">'
-                  f'<video src="{esc(vid["src"])}" poster="{esc(vid["poster"])}" muted playsinline preload="metadata" aria-label="{esc(f["title"])}: video tour"></video>'
-                  f'<figcaption>{esc(vid.get("caption", "Video tour"))}</figcaption></figure>') if vid else ""
-        off = 1 if vid else 0
-        slides += "".join(
-            f'<figure class="ss-slide" role="group" aria-roledescription="slide" aria-label="{k+1+off} of {n}">'
-            f'<img src="{esc(x)}" alt="{esc(f["title"] + ": " + caps[k] if k < len(caps) else f["title"] + ", photo " + str(k+1))}"{" loading=\"lazy\"" if k or vid else ""}>'
+        n = len(photos)
+        slides = "".join(
+            f'<figure class="ss-slide" role="group" aria-roledescription="slide" aria-label="{k+1} of {n}">'
+            f'<img src="{esc(x)}" alt="{esc(f["title"] + ": " + caps[k] if k < len(caps) else f["title"] + ", photo " + str(k+1))}"{" loading=\"lazy\"" if k else ""}>'
             + (f'<figcaption>{esc(caps[k])}</figcaption>' if k < len(caps) else "") + '</figure>' for k, x in enumerate(photos))
         show = (f'<section class="ss" data-slideshow aria-roledescription="carousel" aria-label="Photos of the finished project">'
                 f'<div class="ss-track" tabindex="0">{slides}</div>'
@@ -478,6 +484,7 @@ def featured_page(i):
                 f'<span class="ss-count" data-count aria-live="off">1 / {n}</span>'
                 '<button type="button" class="ss-btn" data-pause aria-label="Pause slideshow"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pause" d="M9 5v14M15 5v14"/><path class="i-play" d="M8 5l11 7-11 7z"/></svg></button>'
                 '<button type="button" class="ss-btn" data-next aria-label="Next photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div></section>')
+        show = f'<div class="ss-wrap">{show}{video_tour(f)}</div>'
         gal = ""
     elif photos:
         gal = "".join(f'<img src="{esc(x)}" alt="{esc(f["title"])}, photo {k+1}"{" loading=\"lazy\"" if k else ""}>' for k, x in enumerate(photos))

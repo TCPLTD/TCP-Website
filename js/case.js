@@ -9,34 +9,19 @@
     var track = root.querySelector('.ss-track'), slides = track.children, total = slides.length;
     var count = root.querySelector('[data-count]'), pause = root.querySelector('[data-pause]');
     var at = 0, timer = null, paused = still, hover = false;
-    // A video slide (the tour) plays when it is showing; the slideshow moves on when it ends.
-    var videos = [].slice.call(track.querySelectorAll('video'));
-    function vid() { return slides[at].querySelector('video'); }
-    function playShown() {
-      videos.forEach(function (v) { if (v !== vid()) v.pause(); });
-      var v = vid();
-      if (v) {
-        if (paused) v.pause();
-        else if (!v.done || !hover) { v.done = false; var r = v.play(); if (r && r.catch) r.catch(function () { v.controls = true; }); }
-      }
-    }
-    videos.forEach(function (v) {
-      v.addEventListener('ended', function () { v.currentTime = 0; v.done = true; if (!paused && !hover && v === vid()) go(at + 1); });
-    });
     function go(i) {
       at = (i + total) % total;
       track.scrollTo({ left: at * track.clientWidth, behavior: still ? 'auto' : 'smooth' });
       count.textContent = (at + 1) + ' / ' + total;
-      playShown(); restart();
+      restart();
     }
     function restart() {
       clearTimeout(timer);
-      var v = vid();
-      if (!paused && !hover && (!v || v.done)) timer = setTimeout(function () { go(at + 1); }, v ? 800 : 5000);
+      if (!paused && !hover) timer = setTimeout(function () { go(at + 1); }, 5000);
     }
     function setPaused(p) {
       paused = p; pause.classList.toggle('is-paused', p);
-      pause.setAttribute('aria-label', (p ? 'Play' : 'Pause') + ' slideshow'); playShown(); restart();
+      pause.setAttribute('aria-label', (p ? 'Play' : 'Pause') + ' slideshow'); restart();
     }
     root.querySelector('[data-prev]').addEventListener('click', function () { go(at - 1); restart(); });
     root.querySelector('[data-next]').addEventListener('click', function () { go(at + 1); restart(); });
@@ -54,10 +39,30 @@
       clearTimeout(t);
       t = setTimeout(function () {
         var i = Math.round(track.scrollLeft / track.clientWidth);
-        if (i !== at) { at = i; count.textContent = (at + 1) + ' / ' + total; playShown(); restart(); }
+        if (i !== at) { at = i; count.textContent = (at + 1) + ' / ' + total; restart(); }
       }, 120);
     });
     setPaused(paused);
+  });
+
+  // Video tour: a button under the photos opens a pop-up player. Closing it stops the video.
+  // The slideshow pauses while the video is open.
+  document.querySelectorAll('.tour').forEach(function (root) {
+    var btn = root.querySelector('[data-tour]'), dlg = root.querySelector('dialog'), v = dlg.querySelector('video');
+    var ssPause = document.querySelector('[data-slideshow] [data-pause]');
+    btn.addEventListener('click', function () {
+      if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+      if (ssPause && !ssPause.classList.contains('is-paused')) { ssPause.click(); dlg._resume = true; }
+      v.currentTime = 0; var r = v.play(); if (r && r.catch) r.catch(function () {});
+    });
+    function close() { v.pause(); if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); }
+    dlg.querySelector('[data-tour-close]').addEventListener('click', close);
+    dlg.addEventListener('click', function (e) { if (e.target === dlg) close(); });   // click outside the video
+    dlg.addEventListener('close', function () {
+      v.pause();
+      if (dlg._resume && ssPause) { dlg._resume = false; ssPause.click(); }
+      btn.focus();
+    });
   });
 
   // Tabs (before and after, drawings); before and after also moves on by itself until someone picks a tab
